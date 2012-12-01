@@ -40,7 +40,15 @@ if (socket_bind($socket, "0.0.0.0", "1701") == false)
 $clients = array();
 
 function __autoload($class) {
-	require_once('classes/class.'.$class.'.php');
+	print("Looking for $class\n");
+#	if (file_exists('classes/class.'.$class.'.php')) {
+		@include_once('classes/class.'.$class.'.php');
+#	}
+#	} elseif (is_file('classes/avps/class.'.$class.'.php')) {
+		@include_once('classes/avps/class.'.$class.'.php');
+#	} elseif (is_file('classes/constants/class.'.$class.'.php')) {
+		@include_once('classes/constants/class.'.$class.'.php');
+#	}
 }
 
 while(1) {

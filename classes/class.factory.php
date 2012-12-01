@@ -32,18 +32,36 @@ class factory {
 
 	static function createAVP($type, $value) {
 		$avp = false;
+		// is mandatory -> always true!
 		return $avp;
 	}
 
 	static function parseAVP($avp_raw_data) {
+		list( , $first_byte) = unpack('C', $avp_raw_data[0]);
+		if ( $first_byte & 60 ) { // check for reserved bits
+			$avp_type = 'unrecognised';
+		}
 		list( , $avp_type) = unpack('n', $avp_raw_data[4].$avp_raw_data[5]);
 
 		switch($avp_type) {
 			case constants_avp_type::MESSAGE_TYPE_AVP:
 				$avp = new l2tp_message_type_avp($avp_raw_data);
 				break;
+			case constants_avp_type::PROTOCOL_VERSION_AVP:
+				$avp = new l2tp_protocol_version_avp($avp_raw_data);
+				break;
+			case constants_avp_type::HOSTNAME_AVP:
+				$avp = new l2tp_hostname_avp($avp_raw_data);
+				break;
+			case constants_avp_type::FRAMING_CAPABILITIES_AVP:
+				$avp = new l2tp_framing_capabilities_avp($avp_raw_data);
+				break;
+			case constants_avp_type::BEARER_CAPABILITIES_AVP:
+				$avp = new l2tp_bearer_capabilities_avp($avp_raw_data);
+				break;
 			default:
 				// default AVP
+				die("AVP TYPE IS $avp_type");
 				$avp = new l2tp_unrecognized_avp($avp_raw_data);
 		}
 		return $avp;

@@ -1,29 +1,26 @@
-<?php
+<?php 
 
-
-class l2tp_message_type_avp extends l2tp_avp {
+class l2tp_hostname_avp extends l2tp_avp {
 
 	protected function parse($data) {
 		list( , $avp_flags_len) = unpack('n', $data[0].$data[1]);
 		$this->is_mandatory = ($avp_flags_len & 32768) ? true : false;
 		$this->is_hidden = ($avp_flags_len & 16384) ? true : false;
 		$this->length = ($avp_flags_len & 1023);
-		if ($this->length != 8 ) {
-			throw new Exception("Invalid length for message type!");
+		if ($this->length < 7 ) {
+			throw new Exception("Invalid length for protocol version AVP!");
 		}
 		list( , $this->vendor_id) = unpack('n', $data[2].$data[3]);
 		list( , $this->type) = unpack('n', $data[4].$data[5]);
-		list( , $this->value) = unpack('n', $data[6].$data[7]);
+		$this->value = substr($data, 6, $this->length - 6);
 		$this->validate();
 	}
 
 	function setValue($value) {
-		 if ($value > 0 && $value < 65536 ) {
-			$this->value = $value;
-		 } else {
-			 throw new Exception("Invalid value");
-		 }
-		 return true;
+		// TODO: Possibli we have to check at least length ??
+		$this->value = $value;
+		throw new Exception("Invalid value for protocol type AVP");
+		return true;
 	}
 
 	function encode() {
@@ -31,12 +28,8 @@ class l2tp_message_type_avp extends l2tp_avp {
 	}
 
 	function validate() {
-		if (!constants_avp_type::avp_type_exists($this->value)) {
-			if ($this->is_mandatory) {
-				throw new Exception("Invalid messate type AVP. Tunnel must be terminated.");
-			} else {
-				$this->is_ignored = true;
-			}
+		if ($this->is_hidden) {
+			throw new Exception("Hostname AVP must not be HIDDEN");
 		}
 	}
 

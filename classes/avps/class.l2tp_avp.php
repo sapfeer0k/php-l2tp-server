@@ -5,10 +5,10 @@ abstract class l2tp_avp {
 	protected $is_mandatory;
 	protected $is_hidden;
 	protected $value;
-
 	protected $length;
 	protected $vendor_id;
 	protected $type;
+	protected $is_ignored;
 
 	protected abstract function parse($data);
 
@@ -19,6 +19,10 @@ abstract class l2tp_avp {
 	protected abstract function encode();
 
 	function __construct($data=false) {
+		$this->is_mandatory = true;
+		$this->is_hidden = false;
+		$this->is_ignored = false;
+
 		if($data) {
 			if (strlen($data) >= 6) {
 				$this->parse($data);
@@ -26,7 +30,6 @@ abstract class l2tp_avp {
 				throw new Exception("AVP length can't be less than 6 bytes!");
 			}
 		} else {
-			$this->length = 6;
 		}
 	}
 

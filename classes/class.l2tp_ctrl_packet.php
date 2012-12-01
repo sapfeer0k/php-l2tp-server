@@ -85,7 +85,12 @@ class l2tp_ctrl_packet extends l2tp_packet {
 			$avp_len = $avp_bytes & 1023;
 			$avp_raw_data = substr($packet_data, 0, $avp_len);
 
-			$this->avps[] = factory::parseAVP($avp_raw_data);
+#			try { 
+				$this->avps[] = factory::parseAVP($avp_raw_data);
+#			} catch ( Exception $e) {
+				// Unrecognized AVP ?
+#				print_r($e);
+#			}
 			$packet_data = substr($packet_data, $avp_len);
 
 			unset($avp_len, $avp_bytes);
@@ -95,12 +100,13 @@ class l2tp_ctrl_packet extends l2tp_packet {
 		} else {
 			throw new Exception("Message type AVP not found in the packet");
 		}
-
+/*
 		if ($this->getAVP(PROTOCOL_VERSION_AVP) && $this->getAVP(HOSTNAME_AVP) && $this->getAVP(FRAMING_CAPABILITIES_AVP) && $this->getAVP(ASSIGNED_TUNNEL_ID_AVP)) {
 
 		} else {
 			throw new Exception("Not all AVP are presented in the packet");
 		}
+*/
 		return true;
 	}
 

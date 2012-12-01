@@ -4,7 +4,6 @@
 class l2tp_unrecognized_avp extends l2tp_avp {
 
 	function __construct($data) {
-		$this->is_valid = false;
 		$this->parse($data);
 	}
 
@@ -18,17 +17,11 @@ class l2tp_unrecognized_avp extends l2tp_avp {
 		return $this->is_ignored;
 	}
 
-	function isValid() {
-		return $this->is_valid;
-	}
-
 	protected function validate() {
-		if (!$this->is_valid) {
-			if ($this->is_mandatory) {
-				throw new Exception("");
-			} else {
-				$this->is_ignored = true;
-			}
+		if ($this->is_mandatory) {
+			throw new Exception("Unknown mandatory AVP!");
+		} else {
+			$this->is_ignored = true;
 		}
 	}
 

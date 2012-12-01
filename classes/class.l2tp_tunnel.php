@@ -68,6 +68,7 @@ class l2tp_tunnel {
 		// Construct all needed AVPs:
 		$avp_mt = factory::createAVP(constants_message_type::MESSAGE_TYPE_AVP, MT_SCCRP);
 		$avps[] = $avp_mt;
+		die(__FUNCTION__);
 /*
 		$avp_pv = new l2tp_avp();
 		$avp_pv->type = PROTOCOL_VERSION_AVP;

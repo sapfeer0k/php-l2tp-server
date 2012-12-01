@@ -50,6 +50,13 @@ class constants_avp_type {
 	const PRIVATE_GROUP_ID_AVP = 37;
 	const RX_CONNECTION_SPEED_BPS_AVP = 38;
 	const SEQUENCE_REQUIRED_AVP = 39;
+
+	static function avp_type_exists($type) {
+		if ( $type >= 0 && $type < 40 && $type != 20) {
+			return true;
+		}
+		return false;
+	}
 }
 
 ?>
