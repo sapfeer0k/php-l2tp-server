@@ -5,7 +5,7 @@ define('MT_SCCRQ', 1);
 define('MT_SCCRP', 2);
 define('MT_SCCCN', 3);
 define('MT_StopCCN', 4);
-// 5 is reserved 
+// 5 is reserved
 define('MT_HELLO', 6);
 
 // Call managment:
@@ -17,7 +17,6 @@ define('MT_ICRP' , 11);
 define('MT_ICCN' , 12);
 // 13 is reserved
 define('MT_CDN' , 14);
-
 // Error Reporting
 define('MT_WEN', 15);
 // PPP Session Control
@@ -26,32 +25,13 @@ define('MT_SLI', 16);
 
 class l2tp_ctrl_packet extends l2tp_packet {
 
-	private $message_type;
-/*
-	private $is_length_present;
-	private $is_sequence_present;
-	private $is_offset_present;
-	private $is_prioritized;
-
-	private $proto_version;
-	private $packet_type;
-
-	private $length;
-	private $tunnel_id;
-	private $session_id;
-	private $Ns;
-	private $Nr;
-	private $offset_size;
-	private $raw_data;
-
-	private $error;
-	private $avps;
-*/
+	protected $message_type;
+	protected $avps;
 
 	function __construct($raw_packet=false) {
 		if ($raw_packet) {
 			if (!$this->parse($raw_packet)) {
-				throw new Exception("Can't parse packet");	
+				throw new Exception("Can't parse packet");
 			}
 		}
 	}
@@ -68,7 +48,7 @@ class l2tp_ctrl_packet extends l2tp_packet {
 		if (!$this->is_length_present) {
 			throw new Exception("Length field should be present for Control messages");
 		}
-		// bits 3,4 are ignored 
+		// bits 3,4 are ignored
 		$this->is_sequence_present = ($byte & 8) ? true : false;
 		if (!$this->is_sequence_present) {
 			throw new Exception("Sequence fields should be present for Control messages");
@@ -83,7 +63,7 @@ class l2tp_ctrl_packet extends l2tp_packet {
 		}
 		unset($byte);
 		list( , $byte2) = unpack('C',$packet[1]);
-		$this->proto_version = ($byte2 & 15 ); 
+		$this->proto_version = ($byte2 & 15 );
 		if ($this->proto_version != 2) {
 			throw new Exception("Unsupported protocol version {$this->proto_version}");
 		}
@@ -100,20 +80,24 @@ class l2tp_ctrl_packet extends l2tp_packet {
 		$packet_data = substr($packet, 12);
 		// let's parse packet's AVPs:
 		while(strlen($packet_data)) {
-			list( , $avp_len) = unpack('n', $packet_data[0].$packet_data[1]);
-			$avp_len = $avp_len & 1023;
-			$this->avps[] = new l2tp_avp(substr($packet_data, 0, $avp_len));
+			// Get AVP length:
+			list( , $avp_bytes) = unpack('n', $packet_data[0].$packet_data[1]);
+			$avp_len = $avp_bytes & 1023;
+			$avp_raw_data = substr($packet_data, 0, $avp_len);
+
+			$this->avps[] = factory::parseAVP($avp_raw_data);
 			$packet_data = substr($packet_data, $avp_len);
-			unset($avp_len);
+
+			unset($avp_len, $avp_bytes);
 		}
 		if ($this->avps[0]->type == MESSAGE_TYPE_AVP) {
 			$this->message_type = $this->avps[0]->value;
 		} else {
 			throw new Exception("Message type AVP not found in the packet");
 		}
-		
+
 		if ($this->getAVP(PROTOCOL_VERSION_AVP) && $this->getAVP(HOSTNAME_AVP) && $this->getAVP(FRAMING_CAPABILITIES_AVP) && $this->getAVP(ASSIGNED_TUNNEL_ID_AVP)) {
-			
+
 		} else {
 			throw new Exception("Not all AVP are presented in the packet");
 		}
@@ -127,7 +111,7 @@ class l2tp_ctrl_packet extends l2tp_packet {
 			}
 		}
 		return NULL;
-	} 
+	}
 
 	// Return packet properties encoded as raw string:
 	function encode() {

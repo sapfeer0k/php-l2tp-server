@@ -3,16 +3,19 @@
 
 class l2tp_inf_packet extends l2tp_packet {
 
+	protected $offset_size;
+
 	function __construct($raw_packet=false) {
 		if ($raw_packet) {
 			if (!$this->parse($raw_packet)) {
-				throw new Exception("Can't parse packet");	
+				throw new Exception("Can't parse packet");
 			}
 		}
 	}
 
-	private function parse($packet) {
-		trigger_error("Warning Method ".__METHOD__." in class ".__CLASS__." hasn't finished")
+	function parse($packet) {
+		trigger_error("Warning Method ".__METHOD__." in class ".__CLASS__." hasn't finished");
+		list( , $byte) = unpack('C',$packet[0]);
 		if ($byte & 128 == PACKET_TYPE_DATA) {
 			$this->packet_type = PACKET_TYPE_DATA;
 		} else {
@@ -25,7 +28,7 @@ class l2tp_inf_packet extends l2tp_packet {
 		if ($this->packet_type == PACKET_TYPE_CONTROL && !$this->is_length_present) {
 			throw new Exception("Length field should be present for Control messages");
 		}
-		// bits 3,4 are ignored 
+		// bits 3,4 are ignored
 		$this->is_sequence_present = ($byte & 8) ? true : false;
 		if ($this->packet_type == PACKET_TYPE_CONTROL && !$this->is_sequence_present) {
 			throw new Exception("Length field should be present for Control messages");
@@ -40,7 +43,7 @@ class l2tp_inf_packet extends l2tp_packet {
 		}
 		unset($byte);
 		list( , $byte2) = unpack('C',$packet[1]);
-		$this->proto_version = ($byte2 & 15 ); 
+		$this->proto_version = ($byte2 & 15 );
 		if ($this->proto_version != 2) {
 			throw new Exception("Unsupported protocol version {$this->proto_version}");
 		}
@@ -73,13 +76,13 @@ class l2tp_inf_packet extends l2tp_packet {
 	}
 
 	public function getAVP($type) {
-		foreach($this->avps as $id => $avp) {
+		foreach($this->avps as $avp) {
 			if ($avp->type == $type) {
 				return $avp;
 			}
 		}
 		return false;
-	} 
+	}
 
 	// Return packet properties encoded as raw string:
 	function encode() {

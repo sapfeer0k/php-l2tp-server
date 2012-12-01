@@ -19,30 +19,18 @@ abstract class l2tp_packet {
 	protected $session_id;
 	protected $Ns;
 	protected $Nr;
-	protected $offset_size;
 	protected $raw_data;
 	protected $error;
-	protected $avps;
 
 	function __construct($raw_packet=false) {
 		if ($raw_packet) {
 			if (!$this->parse($raw_packet)) {
-				throw new Exception("Can't parse packet");	
+				throw new Exception("Can't parse packet");
 			}
 		}
 	}
-
+	// Decode packet from raw data
 	protected abstract function parse($packet);
-
-	public function getAVP($type) {
-		foreach($this->avps as $id => $avp) {
-			if ($avp->type == $type) {
-				return $avp;
-			}
-		}
-		return false;
-	} 
-
 	// Return packet properties encoded as raw string:
 	abstract function encode();
 

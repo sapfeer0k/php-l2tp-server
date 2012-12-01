@@ -1,15 +1,16 @@
 <?php
 
 
-class unrecognized_l2tp_avp extends l2tp_avp {
+class l2tp_unrecognized_avp extends l2tp_avp {
 
 	function __construct($data) {
 		$this->is_valid = false;
+		$this->parse($data);
 	}
 
 	protected function parse($data) {
 		list( , $avp_flags_len) = unpack('n', $data[0].$data[1]);
-                $this->is_mandatory = ($avp_flags_len & 32768) ? true : false;
+		$this->is_mandatory = ($avp_flags_len & 32768) ? true : false;
 		$this->validate();
 	}
 
@@ -24,7 +25,7 @@ class unrecognized_l2tp_avp extends l2tp_avp {
 	protected function validate() {
 		if (!$this->is_valid) {
 			if ($this->is_mandatory) {
-				$this->is_ignored = false;
+				throw new Exception("");
 			} else {
 				$this->is_ignored = true;
 			}
@@ -33,9 +34,10 @@ class unrecognized_l2tp_avp extends l2tp_avp {
 
 	protected function setValue($value) {
 		// this avp isn't recognized and doesn't have values
+		return false;
 	}
 
-	proteced function encode() {
+	protected function encode() {
 		// this avp can't be encoded
 	}
 }

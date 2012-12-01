@@ -4,10 +4,19 @@
 abstract class l2tp_avp {
 	protected $is_mandatory;
 	protected $is_hidden;
+	protected $value;
 
 	protected $length;
 	protected $vendor_id;
 	protected $type;
+
+	protected abstract function parse($data);
+
+	protected abstract function validate();
+
+	protected abstract function setValue($value);
+
+	protected abstract function encode();
 
 	function __construct($data=false) {
 		if($data) {
@@ -20,14 +29,6 @@ abstract class l2tp_avp {
 			$this->length = 6;
 		}
 	}
-
-	protected abstract function parse($data);
-
-	protected abstract function validate();
-
-	protected abstract function setValue($value);
-
-	proteced abstract function encode();
 
 	function isIgnored() {
 		return $this->is_ignored;
