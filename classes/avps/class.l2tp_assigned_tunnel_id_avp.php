@@ -32,13 +32,11 @@ class l2tp_assigned_tunnel_id_avp extends l2tp_avp {
 	}
 
 	function validate() {
-			if (!$this->is_mandatory) {
-				throw new Exception("Assigned Tunnel ID should be mandatory AVP");
-			}
-			if ($this->value == 0) {
-				throw new Exception("Assigned Tunnel ID should be greater than 0");
-			}
+		if (!$this->is_mandatory) {
+			throw new Exception("Assigned Tunnel ID should be mandatory AVP");
+		}
+		if ($this->value == 0) {
+			throw new Exception("Assigned Tunnel ID should be greater than 0");
 		}
 	}
-
 }
