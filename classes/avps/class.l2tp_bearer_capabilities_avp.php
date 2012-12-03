@@ -18,7 +18,6 @@ class l2tp_bearer_capabilities_avp extends l2tp_avp {
 		$this->value["analog"] = ($flag_byte & 2) ? true : false;
 		$this->value["digital"] = ($flag_byte & 1) ? true : false;
 		$this->validate();
-		print_r($this);
 	}
 
 	function setValue($value) {

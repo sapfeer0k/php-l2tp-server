@@ -61,6 +61,7 @@ class factory {
 				break;
 			case constants_avp_type::FIRMWARE_REVISION_AVP:
 				$avp = new l2tp_firmware_revision_avp($avp_raw_data);
+				break;
 			case constants_avp_type::ASSIGNED_TUNNEL_ID_AVP:
 				$avp = new l2tp_assigned_tunnel_id_avp($avp_raw_data);
 				break;

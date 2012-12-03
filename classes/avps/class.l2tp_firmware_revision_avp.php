@@ -15,7 +15,6 @@ class l2tp_firmware_revision_avp extends l2tp_avp {
 		list( , $this->type) = unpack('n', $data[4].$data[5]);
 		list( , $this->value) = unpack('n', $data[6].$data[7]);
 		$this->validate();
-		print_r($this);
 	}
 
 	function setValue($value) {
