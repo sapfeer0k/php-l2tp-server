@@ -59,6 +59,9 @@ class factory {
 			case constants_avp_type::BEARER_CAPABILITIES_AVP:
 				$avp = new l2tp_bearer_capabilities_avp($avp_raw_data);
 				break;
+			case constants_avp_type::ASSIGNED_TUNNEL_ID_AVP:
+				$avp = new l2tp_assigned_tunnel_id_avp($avp_raw_data);
+				break;
 			default:
 				// default AVP
 				die("AVP TYPE IS $avp_type");
