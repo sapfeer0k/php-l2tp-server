@@ -59,9 +59,12 @@ class factory {
 			case constants_avp_type::BEARER_CAPABILITIES_AVP:
 				$avp = new l2tp_bearer_capabilities_avp($avp_raw_data);
 				break;
+			case constants_avp_type::FIRMWARE_REVISION_AVP:
+				$avp = new l2tp_firmware_revision_avp($avp_raw_data);
+				break;
 			default:
 				// default AVP
-				die("AVP TYPE IS $avp_type");
+				echo("AVP TYPE IS $avp_type");
 				$avp = new l2tp_unrecognized_avp($avp_raw_data);
 		}
 		return $avp;
