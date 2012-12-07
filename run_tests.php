@@ -19,6 +19,6 @@
  *
  */
 
-system("phpunit --debug tests/classes/avps/ ");
+system("phpunit --debug tests/Tests.php");
 
 ?>

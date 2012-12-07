@@ -25,6 +25,8 @@ ini_set('display_errors', 'On');
 
 require_once('Autoloader.php');
 
+Autoloader::registerPath(dirname(__FILE__).'/classes/');
+
 spl_autoload_register(array('Autoloader' , 'load'));
 
 Autoloader::registerPath(dirname(__FILE__).'/classes/');

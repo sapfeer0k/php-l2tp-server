@@ -37,6 +37,7 @@ class L2tp_AVP_MessageTypeTest extends PHPUnit_Framework_TestCase {
 		$avp = new L2tp_AVP_MessageType();
 		$this->assertEquals(true, $avp->is_mandatory);
 		$this->assertEquals(false, $avp->is_hidden);
+		$this->assertEquals(8, $avp->length);
 	}
 
 	/**
@@ -51,13 +52,26 @@ class L2tp_AVP_MessageTypeTest extends PHPUnit_Framework_TestCase {
 	}
 
 	/**
-	 * @ dataProvider providerValues
+	 * @dataProvider providerTypes
 	 */
-	public function testEncode() {
+	public function testEncode($message_type) {
 		$avp = new L2tp_AVP_MessageType();
-		$avp->setValue(2);
+
+		$avp->setValue($message_type);
 		$binary_data = $avp->encode();
 		$test_avp = new L2tp_AVP_MessageType($binary_data);
+		$this->assertEquals($message_type, $test_avp->value);
+		$this->assertEquals(false, $test_avp->is_hidden);
+	}
+
+	// Providers
+	public function providerTypes() {
+		$class = new ReflectionClass('Constants_AvpType');
+		$values = $class->getConstants();
+		foreach($values as $value) {
+			$message_types[] = array($value);
+		}
+		return $message_types;
 	}
 
 	public function providerValues() {
