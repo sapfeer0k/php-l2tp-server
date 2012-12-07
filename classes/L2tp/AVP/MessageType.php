@@ -15,7 +15,7 @@ class L2tp_AVP_MessageType extends L2tp_AVP {
 	}
 
 	function setValue($value) {
-		 if ($value > 0 && $value < 65536 ) {
+		 if ($value >= 0 && $value < 65536 ) {
 			$this->value = $value;
 		 } else {
 			 throw new Exception("Invalid value for Message Type AVP");
@@ -29,8 +29,8 @@ class L2tp_AVP_MessageType extends L2tp_AVP {
 		if ($this->is_mandatory) {
 			$flags+= 32768;
 		}
-		$length = 8;
-		return pack("CCnnn", $flags, $length, 0x01, Constants_AvpType::MESSAGE_TYPE_AVP, $this->value);
+		$this->length = 6 + 2; // flags, len, type + value
+		return pack("CCnnn", $flags, $this->length, 0x01, Constants_AvpType::MESSAGE_TYPE_AVP, $this->value);
 		// this AVP mustn't be hidden
 
 	}
