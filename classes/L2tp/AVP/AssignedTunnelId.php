@@ -14,7 +14,7 @@ class L2tp_AVP_AssignedTunnelId extends L2tp_AVP {
 		list( , $this->vendor_id) = unpack('n', $data[2].$data[3]);
 		list( , $this->type) = unpack('n', $data[4].$data[5]);
 		list( , $this->value) = unpack('n', $data[6].$data[7]);
-		print_r($this);
+//		print_r($this);
 		$this->validate();
 	}
 

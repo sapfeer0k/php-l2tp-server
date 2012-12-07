@@ -30,18 +30,23 @@ class Factory {
 		return $packet;
 	}
 
-	static function createAVP($type, $value) {
-		$avp = false;
-		// is mandatory -> always true!
-		return $avp;
-	}
-
-	static function parseAVP($avp_raw_data) {
-		list( , $first_byte) = unpack('C', $avp_raw_data[0]);
-		if ( $first_byte & 60 ) { // check for reserved bits
-			$avp_type = 'unrecognised';
+	static function createAVP($params) {
+		$avp_raw_data = false;
+		$avp_type = NULL;
+		// --
+		if (isset($params['avp_raw_data'])) {
+			$avp_raw_data = $params['avp_raw_data'];
+			list( , $first_byte) = unpack('C', $avp_raw_data[0]);
+			if ( $first_byte & 60 ) { // check for reserved bits
+				$avp_type = 'unrecognised';
+			}
+			list( , $avp_type) = unpack('n', $avp_raw_data[4].$avp_raw_data[5]);
+		} elseif (isset($params['avp_type'])) {
+			// ---
+			$avp_type = $params['avp_type'];
+		} else {
+			throw new Exception("Unknown parameters for ".__METHOD__.".");
 		}
-		list( , $avp_type) = unpack('n', $avp_raw_data[4].$avp_raw_data[5]);
 
 		switch($avp_type) {
 			case Constants_AvpType::MESSAGE_TYPE_AVP:

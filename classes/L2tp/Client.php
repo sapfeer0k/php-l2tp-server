@@ -60,29 +60,32 @@ class L2tp_Client  {
 	}
 
 	private function controlRequest() {
-		$message_type = $this->packet->getAVP(MESSAGE_TYPE_AVP)->value;
+		$message_type = $this->packet->getAVP(Constants_AvpType::MESSAGE_TYPE_AVP)->value;
 		switch($message_type) {
 			case MT_SCCRQ:
 				// AVP that must be present:
-				$tunnel_id = $this->packet->getAVP(ASSIGNED_TUNNEL_ID_AVP)->value;
+				$tunnel_id = $this->packet->getAVP(Constants_AvpType::ASSIGNED_TUNNEL_ID_AVP)->value;
 				// let's fill other properties:
-				$this->hostname = $this->packet->getAVP(HOSTNAME_AVP)->value;
+				$this->hostname = $this->packet->getAVP(Constants_AvpType::HOSTNAME_AVP)->value;
 				// TODO: Check framing capabilities & protocol version
 
 				// AVP that may be present: Bearer Capabilities , Receive Window Size , Challenge,
 				// Tie Breaker, Firmware Revision , Vendor Name
-				$challenge = $this->packet->getAVP(CHALLENGE_AVP);
+				$challenge = $this->packet->getAVP(Constants_AvpType::CHALLENGE_AVP);
 
 				// Save new tunnel:
-				$this->tunnels[$tunnel_id] = new L2tp_Tunnel($this->packet->avps);
-			break;
+				$this->tunnels[$tunnel_id] = new L2tp_Tunnel($tunnel_id);
+				break;
+			case MT_SCCRP:
+				//TODO: Handle outgoing requests...
+				break;
 			default:
 				// This is not control tunnel message, let it be handled by session:
 				$tunnel_id = $this->packet->tunnel_id;
 		}
 
 		if (isset($this->tunnels[$tunnel_id])) {
-			$this->tunnels[$tunnel_id]->processRequest();
+			$this->tunnels[$tunnel_id]->processRequest($this->packet->avps);
 			// TODO: Set l2tp packet header for the response packet
 		} else {
 			throw new Exception_Tunnel("Tunnel # ${tunnel_id} is not found");

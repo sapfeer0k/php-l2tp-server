@@ -24,7 +24,7 @@
  *
  * @author "Sergei Lomakov <sergei@lomakov.net>"
  */
-class L2tp_AVP_ReceiveWindowSize {
+class L2tp_AVP_ReceiveWindowSize extends L2tp_AVP {
 	//put your code here
 
 	protected function parse($data) {
@@ -42,7 +42,7 @@ class L2tp_AVP_ReceiveWindowSize {
 	}
 
 	function setValue($value) {
-		if ($value > 0 && $value < 65535) {
+		if ($value > 0 && $value < 0xFFFF) {
 			$this->value = $value;
 		} else {
 			throw new Exception("Invalid value for Receive Window Size AVP");

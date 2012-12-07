@@ -7,8 +7,8 @@ class L2tp_AVP_Hostname extends L2tp_AVP {
 		$this->is_mandatory = ($avp_flags_len & 32768) ? true : false;
 		$this->is_hidden = ($avp_flags_len & 16384) ? true : false;
 		$this->length = ($avp_flags_len & 1023);
-		if ($this->length < 7 ) {
-			throw new Exception("Invalid length for protocol version AVP!");
+		if ($this->length < 1 ) {
+			throw new Exception("Invalid length for Hostname AVP!");
 		}
 		list( , $this->vendor_id) = unpack('n', $data[2].$data[3]);
 		list( , $this->type) = unpack('n', $data[4].$data[5]);
@@ -19,7 +19,6 @@ class L2tp_AVP_Hostname extends L2tp_AVP {
 	function setValue($value) {
 		// TODO: Possibli we have to check at least length ??
 		$this->value = $value;
-		throw new Exception("Invalid value for protocol type AVP");
 		return true;
 	}
 

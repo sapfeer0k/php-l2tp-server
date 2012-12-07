@@ -18,7 +18,8 @@
 *
 *****/
 
-define('L2TP_PHP_SERVER_VERSION', 0x01);
+define('L2TP_PHP_SERVER_VERSION', 0x00);
+define('L2TP_PHP_SERVER_REVISION', 0x01);
 
 error_reporting(E_ALL);
 ini_set('display_errors', 'On');

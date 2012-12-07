@@ -24,7 +24,7 @@
  *
  * @author "Sergei Lomakov <sergei@lomakov.net>"
  */
-class Constants_TunnelState {
+class Constants_TunnelStates {
 	const TUNNEL_STATE_NULL = 0;
 	const TUNNEL_STATE_SCCRQ = 1;
 	const TUNNEL_STATE_SCCRP = 2;

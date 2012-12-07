@@ -25,28 +25,29 @@ class L2tp_Tunnel {
 	private $id;
 	private $state;
 
-	function __construct($avps) {
-		$this->state = Constants_TunnelState::TUNNEL_STATE_NULL;
+	function __construct($tunnel_id) {
+		$this->state = Constants_TunnelStates::TUNNEL_STATE_NULL;
 		// no problem with avps:
-		if ( 0 ) print_r($avps);
-		$this->state = Constants_TunnelState::TUNNEL_STATE_SCCRQ;
+		$this->id = $tunnel_id;
+		$this->state = Constants_TunnelStates::TUNNEL_STATE_SCCRQ;
 	}
 
-	function processRequest() {
+	function processRequest($avps) {
+#		if ( $avps->find
 		switch($this->state) {
-			case Constants_TunnelState::TUNNEL_STATE_NULL:
+			case Constants_TunnelStates::TUNNEL_STATE_NULL:
 				// How we can get here ? No tunnel, no packets , exception ?
 			break;
-			case Constants_TunnelState::TUNNEL_STATE_SCCRQ: // We've got a request, let's answer then? :-)
+			case Constants_TunnelStates::TUNNEL_STATE_SCCRQ: // We've got a request, let's answer then? :-)
 				$this->sendSCCRP();
 			break;
-			case Constants_TunnelState::TUNNEL_STATE_SCCRP:
+			case Constants_TunnelStates::TUNNEL_STATE_SCCRP:
 			break;
-			case Constants_TunnelState::TUNNEL_STATE_SCCCN:
+			case Constants_TunnelStates::TUNNEL_STATE_SCCCN:
 			break;
-			case Constants_TunnelState::TUNNEL_STATE_STOPCCN:
+			case Constants_TunnelStates::TUNNEL_STATE_STOPCCN:
 			break;
-			case Constants_TunnelState::TUNNEL_STATE_HELLO:
+			case Constants_TunnelStates::TUNNEL_STATE_HELLO:
 			break;
 			default:
 				// ? Unknown state!
@@ -57,42 +58,28 @@ class L2tp_Tunnel {
 	private function sendSCCRP() {
 		$avps = array();
 		// Construct all needed AVPs:
-		$avp_mt = Factory::createAVP(constants_message_type::MESSAGE_TYPE_AVP, MT_SCCRP);
+		$avp_mt = Factory::createAVP(array('avp_type' => Constants_AvpType::MESSAGE_TYPE_AVP));
+		$avp_mt->setValue(MT_SCCRP);
 		$avps[] = $avp_mt;
-		die(__FUNCTION__);
-/*
-		$avp_pv = new l2tp_avp();
-		$avp_pv->type = PROTOCOL_VERSION_AVP;
-		$avp_pv->is_mandatory = 1;
-		$avp_pv->is_hidden = 0;
-		$avp_pv->value = '?';
+
+		$avp_pv = Factory::createAVP(array('avp_type' => Constants_AvpType::PROTOCOL_VERSION_AVP));
+		$avp_pv->setValue(array('version' => 1, 'revision' => 0));
 		$avps[] = $avp_pv;
 
-		$avp_fp = new l2tp_avp();
-		$avp_fp->type = FRAMING_CAPABILITIES_AVP;
-		$avp_fp->is_mandatory = 1;
-		$avp_fp->is_hidden = 0;
-		$avp_fp->value = '?';
+		$avp_fp = Factory::createAVP(array('avp_type' => Constants_AvpType::FRAMING_CAPABILITIES_AVP));
+		$avp_fp->setValue(array( 'sync' => true, 'async' => false));
 		$avps[] = $avp_fp;
 
-		$avp_h = new l2tp_avp();
-		$avp_h->type = HOSTNAME_AVP;
-		$avp_h->is_mandatory = 1;
-		$avp_h->is_hidden = 0;
-		$avp_h->value = '?';
+		$avp_h = Factory::createAVP(array('avp_type' => Constants_AvpType::HOSTNAME_AVP));
+		$avp_h->setValue(php_uname("n"));
 		$avps[] = $avp_h;
 
-		$avp_tid = new l2tp_avp();
-		$avp_tid->type = ASSIGNED_TUNNEL_ID_AVP;
-		$avp_tid->is_mandatory = 1;
-		$avp_tid->is_hidden = 0;
-		$avp_tid->value = $this->id;
+		$avp_tid = Factory::createAVP(array('avp_type' => Constants_AvpType::ASSIGNED_TUNNEL_ID_AVP));
+		$avp_tid->setValue($this->id);
 		$avps[] = $avp_tid;
 
 		print_r($avps);
 		die();
- *
- */
 	}
 
 }
