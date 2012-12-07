@@ -36,17 +36,26 @@ class L2tp_AVP_MessageType extends L2tp_AVP {
 	}
 
 	function validate() {
-		if ($this->length != 8 && $this->is_mandatory) {
-			throw new TunnelException("Invalid length for Message Type AVP.");
+		if ($this->length != 8) {
+			if ($this->is_mandatory) {
+				throw new Exception_Tunnel("Invalid length for Message Type AVP.");
+			} else {
+				throw new Exception_Package("Invalid Message Type AVP. Can be ignored.");
+			}
 		}
-		if ($this->is_hidden && $this->is_mandatory) {
-			throw new TunnelException("Invalid message type AVP. Message type AVP shouldn't be hidden.");
+		if ($this->is_hidden) {
+			if (!$this->is_mandatory) {
+				throw new Exception_Tunnel("Invalid message type AVP. Message type AVP shouldn't be hidden.");
+			} else {
+				throw new Exception_Package("Invalid Message Type AVP. Can be ignored.");
+			}
 		}
-		if (!Constants_AvpType::avp_type_exists($this->value) && $this->is_mandatory) {
-			throw new TunnelException("Invalid message type AVP. Tunnel must be terminated.");
-		} else {
-			$this->is_ignored = true;
-			throw new PackageException("Invalid message type AVP. Packet should be ignored.");
+		if (!Constants_AvpType::avp_type_exists($this->value)) {
+			if ($this->is_mandatory) {
+				throw new Exception_Tunnel("Invalid message type AVP. Tunnel must be terminated.");
+			} else {
+				throw new Exception_Package("Invalid Message Type AVP. Can be ignored.");
+			}
 		}
 	}
 

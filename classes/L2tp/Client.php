@@ -77,15 +77,15 @@ class L2tp_Client  {
 				$this->tunnels[$tunnel_id] = new L2tp_Tunnel($this->packet->avps);
 			break;
 			default:
-				// Proper handling other message types!
+				// This is not control tunnel message, let it be handled by session:
 				$tunnel_id = $this->packet->tunnel_id;
 		}
-		echo $tunnel_id;
+
 		if (isset($this->tunnels[$tunnel_id])) {
 			$this->tunnels[$tunnel_id]->processRequest();
 			// TODO: Set l2tp packet header for the response packet
 		} else {
-			throw new Exception("Tunnel is not found");
+			throw new Exception_Tunnel("Tunnel # ${tunnel_id} is not found");
 		}
 
 	}
