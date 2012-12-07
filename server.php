@@ -27,5 +27,7 @@ require_once('Autoloader.php');
 
 spl_autoload_register(array('Autoloader' , 'load'));
 
+Autoloader::registerPath(dirname(__FILE__).'/classes/');
+
 $l2tp_server = new L2tp_Server();
 $l2tp_server->run();
