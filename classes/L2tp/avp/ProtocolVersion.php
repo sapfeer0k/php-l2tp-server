@@ -1,6 +1,6 @@
-<?php 
+<?php
 
-class l2tp_protocol_version_avp extends l2tp_avp {
+class L2tp_AVP_ProtocolVersion extends L2tp_AVP {
 
 	protected function parse($data) {
 		list( , $avp_flags_len) = unpack('n', $data[0].$data[1]);
@@ -12,7 +12,7 @@ class l2tp_protocol_version_avp extends l2tp_avp {
 		}
 		list( , $this->vendor_id) = unpack('n', $data[2].$data[3]);
 		list( , $this->type) = unpack('n', $data[4].$data[5]);
-		$this->value = array() ; 
+		$this->value = array() ;
 		list( , $this->value["version"]) = unpack('C', $data[6]);
 		list( , $this->value["revision"]) = unpack('C', $data[7]);
 		$this->validate();

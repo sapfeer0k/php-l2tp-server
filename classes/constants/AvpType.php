@@ -10,7 +10,7 @@
  *
  * @author Сергей
  */
-class constants_avp_type {
+class Constants_AvpType {
 	const MESSAGE_TYPE_AVP = 0;
 	const RESULT_CODE_AVP = 1;
 	const PROTOCOL_VERSION_AVP = 2;

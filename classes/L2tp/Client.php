@@ -6,12 +6,12 @@
 * it under the terms of the GNU General Public License as published by
 * the Free Software Foundation, either version 3 of the License, or
 * (at your option) any later version.
-* 
+*
 * php-l2tp-server is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 * GNU General Public License for more details.
-* 
+*
 * You should have received a copy of the GNU General Public License
 * along with php-l2tp-server.  If not, see <http://www.gnu.org/licenses/>.
 *
@@ -22,7 +22,7 @@ define("CONN_STATE_NULL", 0);
 #define("CONN_STATE_
 
 
-class l2tp_client  {
+class L2tp_Client  {
 
 	private $ip_addr;
 	private $port;
@@ -69,12 +69,12 @@ class l2tp_client  {
 				$this->hostname = $this->packet->getAVP(HOSTNAME_AVP)->value;
 				// TODO: Check framing capabilities & protocol version
 
-				// AVP that may be present: Bearer Capabilities , Receive Window Size , Challenge, 
+				// AVP that may be present: Bearer Capabilities , Receive Window Size , Challenge,
 				// Tie Breaker, Firmware Revision , Vendor Name
 				$challenge = $this->packet->getAVP(CHALLENGE_AVP);
 
 				// Save new tunnel:
-				$this->tunnels[$tunnel_id] = new l2tp_tunnel($this->packet->avps);
+				$this->tunnels[$tunnel_id] = new L2tp_Tunnel($this->packet->avps);
 			break;
 			default:
 				// Proper handling other message types!

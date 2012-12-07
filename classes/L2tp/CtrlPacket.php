@@ -23,7 +23,7 @@ define('MT_WEN', 15);
 define('MT_SLI', 16);
 
 
-class l2tp_ctrl_packet extends l2tp_packet {
+class L2tp_CtrlPacket extends L2tp_Packet {
 
 	protected $message_type;
 	protected $avps;
@@ -85,8 +85,8 @@ class l2tp_ctrl_packet extends l2tp_packet {
 			$avp_len = $avp_bytes & 1023;
 			$avp_raw_data = substr($packet_data, 0, $avp_len);
 
-#			try { 
-				$this->avps[] = factory::parseAVP($avp_raw_data);
+#			try {
+				$this->avps[] = Factory::parseAVP($avp_raw_data);
 #			} catch ( Exception $e) {
 				// Unrecognized AVP ?
 #				print_r($e);

@@ -1,6 +1,6 @@
 <?php
 
 
-class l2tp_session {
+class L2tp_Session {
 
 }

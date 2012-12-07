@@ -4,7 +4,7 @@ define('PACKET_TYPE_CONTROL', 128);
 define('PACKET_TYPE_DATA', 0);
 
 
-abstract class l2tp_packet {
+abstract class L2tp_Packet {
 
 	protected $is_length_present;
 	protected $is_sequence_present;

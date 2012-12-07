@@ -1,7 +1,7 @@
 <?php
 
 
-class l2tp_unrecognized_avp extends l2tp_avp {
+class L2tp_AVP_Unrecognized extends L2tp_AVP {
 
 	function __construct($data) {
 		$this->parse($data);

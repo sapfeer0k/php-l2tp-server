@@ -19,43 +19,34 @@
 *
 *****/
 
-class constants_tunnel_state {
-	const TUNNEL_STATE_NULL = 0;
-	const TUNNEL_STATE_SCCRQ = 1;
-	const TUNNEL_STATE_SCCRP = 2;
-	const TUNNEL_STATE_SCCCN = 3;
-	const TUNNEL_STATE_STOPCCN = 4;
-	const TUNNEL_STATE_HELLO = 6;
-}
 
-
-class l2tp_tunnel {
+class L2tp_Tunnel {
 
 	private $id;
 	private $state;
 
 	function __construct($avps) {
-		$this->state = constants_tunnel_state::TUNNEL_STATE_NULL;
+		$this->state = Constants_TunnelState::TUNNEL_STATE_NULL;
 		// no problem with avps:
 		if ( 0 ) print_r($avps);
-		$this->state = constants_tunnel_state::TUNNEL_STATE_SCCRQ;
+		$this->state = Constants_TunnelState::TUNNEL_STATE_SCCRQ;
 	}
 
 	function processRequest() {
 		switch($this->state) {
-			case constants_tunnel_state::TUNNEL_STATE_NULL:
+			case Constants_TunnelState::TUNNEL_STATE_NULL:
 				// How we can get here ? No tunnel, no packets , exception ?
 			break;
-			case constants_tunnel_state::TUNNEL_STATE_SCCRQ: // We've got a request, let's answer then? :-)
+			case Constants_TunnelState::TUNNEL_STATE_SCCRQ: // We've got a request, let's answer then? :-)
 				$this->sendSCCRP();
 			break;
-			case constants_tunnel_state::TUNNEL_STATE_SCCRP:
+			case Constants_TunnelState::TUNNEL_STATE_SCCRP:
 			break;
-			case constants_tunnel_state::TUNNEL_STATE_SCCCN:
+			case Constants_TunnelState::TUNNEL_STATE_SCCCN:
 			break;
-			case constants_tunnel_state::TUNNEL_STATE_STOPCCN:
+			case Constants_TunnelState::TUNNEL_STATE_STOPCCN:
 			break;
-			case constants_tunnel_state::TUNNEL_STATE_HELLO:
+			case Constants_TunnelState::TUNNEL_STATE_HELLO:
 			break;
 			default:
 				// ? Unknown state!
@@ -66,7 +57,7 @@ class l2tp_tunnel {
 	private function sendSCCRP() {
 		$avps = array();
 		// Construct all needed AVPs:
-		$avp_mt = factory::createAVP(constants_message_type::MESSAGE_TYPE_AVP, MT_SCCRP);
+		$avp_mt = Factory::createAVP(constants_message_type::MESSAGE_TYPE_AVP, MT_SCCRP);
 		$avps[] = $avp_mt;
 		die(__FUNCTION__);
 /*
@@ -100,7 +91,7 @@ class l2tp_tunnel {
 
 		print_r($avps);
 		die();
- * 
+ *
  */
 	}
 

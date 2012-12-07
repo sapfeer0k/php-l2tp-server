@@ -1,6 +1,6 @@
-<?php 
+<?php
 
-class l2tp_bearer_capabilities_avp extends l2tp_avp {
+class L2tp_AVP_BearerCapabilities extends L2tp_AVP {
 
 	protected function parse($data) {
 		list( , $avp_flags_len) = unpack('n', $data[0].$data[1]);
@@ -14,7 +14,7 @@ class l2tp_bearer_capabilities_avp extends l2tp_avp {
 		list( , $this->type) = unpack('n', $data[4].$data[5]);
 		$this->value = array();
 		list( , $flag_byte) = unpack('C', $data[9]);
-		
+
 		$this->value["analog"] = ($flag_byte & 2) ? true : false;
 		$this->value["digital"] = ($flag_byte & 1) ? true : false;
 		$this->validate();

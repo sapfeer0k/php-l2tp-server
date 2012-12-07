@@ -18,12 +18,12 @@
 *****/
 
 
-class factory {
+class Factory {
 
 	static function createPacket($raw_data) {
 		list( , $byte) = unpack('C',$raw_data[0]);
         if ( $byte & 128 ) {
-			$packet = new l2tp_ctrl_packet($raw_data);
+			$packet = new L2tp_CtrlPacket($raw_data);
 		} else {
 			$packet = new l2tp_data_packet($raw_data);
 		}
@@ -44,31 +44,31 @@ class factory {
 		list( , $avp_type) = unpack('n', $avp_raw_data[4].$avp_raw_data[5]);
 
 		switch($avp_type) {
-			case constants_avp_type::MESSAGE_TYPE_AVP:
-				$avp = new l2tp_message_type_avp($avp_raw_data);
+			case Constants_AvpType::MESSAGE_TYPE_AVP:
+				$avp = new L2tp_AVP_MessageType($avp_raw_data);
 				break;
-			case constants_avp_type::PROTOCOL_VERSION_AVP:
-				$avp = new l2tp_protocol_version_avp($avp_raw_data);
+			case Constants_AvpType::PROTOCOL_VERSION_AVP:
+				$avp = new L2tp_AVP_ProtocolVersion($avp_raw_data);
 				break;
-			case constants_avp_type::HOSTNAME_AVP:
-				$avp = new l2tp_hostname_avp($avp_raw_data);
+			case Constants_AvpType::HOSTNAME_AVP:
+				$avp = new L2tp_AVP_Hostname($avp_raw_data);
 				break;
-			case constants_avp_type::FRAMING_CAPABILITIES_AVP:
-				$avp = new l2tp_framing_capabilities_avp($avp_raw_data);
+			case Constants_AvpType::FRAMING_CAPABILITIES_AVP:
+				$avp = new L2tp_AVP_FramingCapabilities($avp_raw_data);
 				break;
-			case constants_avp_type::BEARER_CAPABILITIES_AVP:
-				$avp = new l2tp_bearer_capabilities_avp($avp_raw_data);
+			case Constants_AvpType::BEARER_CAPABILITIES_AVP:
+				$avp = new L2tp_AVP_BearerCapabilities($avp_raw_data);
 				break;
-			case constants_avp_type::FIRMWARE_REVISION_AVP:
-				$avp = new l2tp_firmware_revision_avp($avp_raw_data);
+			case Constants_AvpType::FIRMWARE_REVISION_AVP:
+				$avp = new L2tp_AVP_FirmwareRevision($avp_raw_data);
 				break;
-			case constants_avp_type::ASSIGNED_TUNNEL_ID_AVP:
-				$avp = new l2tp_assigned_tunnel_id_avp($avp_raw_data);
+			case Constants_AvpType::ASSIGNED_TUNNEL_ID_AVP:
+				$avp = new L2tp_AVP_AssignedTunnelId($avp_raw_data);
 				break;
 			default:
 				// default AVP
 				echo("AVP TYPE IS $avp_type");
-				$avp = new l2tp_unrecognized_avp($avp_raw_data);
+				$avp = new L2tp_AVP_Unrecognized($avp_raw_data);
 		}
 		return $avp;
 	}

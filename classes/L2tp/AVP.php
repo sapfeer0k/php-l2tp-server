@@ -1,7 +1,7 @@
 <?php
 
 
-abstract class l2tp_avp {
+abstract class L2tp_AVP {
 	protected $is_mandatory;
 	protected $is_hidden;
 	protected $value;

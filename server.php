@@ -18,54 +18,14 @@
 *
 *****/
 
+define('L2TP_PHP_SERVER_VERSION', 0x01);
+
 error_reporting(E_ALL);
 ini_set('display_errors', 'On');
 
-$socket = socket_create(AF_INET,SOCK_DGRAM, SOL_UDP);
-if ($socket < 0)
-{
-	printf("Error in line %d", __LINE__ - 3);
-	exit();
-}
-if (socket_bind($socket, "0.0.0.0", "1701") == false)
-{
-	printf("Error in line %d",__LINE__-2);
-	exit();
-}
+require_once('Autoloader.php');
 
-/*
- *	Server Loop
- */
+spl_autoload_register(array('Autoloader' , 'load'));
 
-$clients = array();
-
-function __autoload($class) {
-	print("Looking for $class\n");
-#	if (file_exists('classes/class.'.$class.'.php')) {
-		@include_once('classes/class.'.$class.'.php');
-#	}
-#	} elseif (is_file('classes/avps/class.'.$class.'.php')) {
-		@include_once('classes/avps/class.'.$class.'.php');
-#	} elseif (is_file('classes/constants/class.'.$class.'.php')) {
-		@include_once('classes/constants/class.'.$class.'.php');
-#	}
-}
-
-while(1) {
-	$buf = NULL;
-	$ip = NULL;
-	$port = NULL;
-	$len = socket_recvfrom($socket, $buf, 65535, 0, $ip, $port);
-	if ($len > 0) {
-		$client_hash = md5($ip .':'. $port);
-		$packet = factory::createPacket($buf);
-		// Is it new client ?
-		if (!isset($clients[$client_hash]) || is_object($clients[$client_hash])) {
-			$clients[$client_hash] = new l2tp_client($ip, $port);
-		}
-		$answer = $clients[$client_hash]->processRequest($packet);
-		die();
-		print_r($answer);
-	}
-}
-
+$l2tp_server = new L2tp_Server();
+$l2tp_server->run();

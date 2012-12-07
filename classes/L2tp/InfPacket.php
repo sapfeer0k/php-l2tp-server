@@ -1,7 +1,7 @@
 <?php
 
 
-class l2tp_inf_packet extends l2tp_packet {
+class L2tp_InfPacket extends L2tp_Packet {
 
 	protected $offset_size;
 

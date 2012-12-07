@@ -47,13 +47,17 @@ class l2tp_message_type_avpTest extends PHPUnit_Framework_TestCase {
 		}
 		$avp->setValue($value);
 	}
-/*
-	public function testEncode($value) {
+
+	/**
+	 * @ dataProvider providerValues
+	 */
+	public function testEncode() {
 		$avp = new l2tp_message_type_avp();
-		$avp->setValue($value);
-		$avp->encode();
+		$avp->setValue(2);
+		$binary_data = $avp->encode();
+		$test_avp = new l2tp_message_type_avp($binary_data);
 	}
-*/
+
 	public function providerValues() {
 		$values = array();
 		$values[] = array( -1 );

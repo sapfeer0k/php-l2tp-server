@@ -1,6 +1,6 @@
-<?php 
+<?php
 
-class l2tp_hostname_avp extends l2tp_avp {
+class L2tp_AVP_Hostname extends L2tp_AVP {
 
 	protected function parse($data) {
 		list( , $avp_flags_len) = unpack('n', $data[0].$data[1]);
