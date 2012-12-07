@@ -37,7 +37,6 @@ class L2tp_AVP_MessageTypeTest extends PHPUnit_Framework_TestCase {
 		$avp = new L2tp_AVP_MessageType();
 		$this->assertEquals(true, $avp->is_mandatory);
 		$this->assertEquals(false, $avp->is_hidden);
-		$this->assertEquals(8, $avp->length);
 	}
 
 	/**

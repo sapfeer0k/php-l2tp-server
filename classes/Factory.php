@@ -65,6 +65,9 @@ class Factory {
 			case Constants_AvpType::ASSIGNED_TUNNEL_ID_AVP:
 				$avp = new L2tp_AVP_AssignedTunnelId($avp_raw_data);
 				break;
+			case Constants_AvpType::RECEIVE_WINDOW_SIZE_AVP:
+				$avp = new L2tp_AVP_ReceiveWindowSize($avp_raw_data);
+				break;
 			default:
 				// default AVP
 				echo("AVP TYPE IS $avp_type");
