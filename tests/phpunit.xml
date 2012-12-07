@@ -20,7 +20,7 @@
 <phpunit>
 	<testsuites>
 		<testsuite name="AVP test suite">
-		    <directory suffix=".php">./classes/avps/</directory>
+		    <directory suffix=".php">.</directory>
 		</testsuite>
 	</testsuites>
 </phpunit>
