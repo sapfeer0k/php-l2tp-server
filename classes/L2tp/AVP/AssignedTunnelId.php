@@ -14,12 +14,11 @@ class L2tp_AVP_AssignedTunnelId extends L2tp_AVP {
 		list( , $this->vendor_id) = unpack('n', $data[2].$data[3]);
 		list( , $this->type) = unpack('n', $data[4].$data[5]);
 		list( , $this->value) = unpack('n', $data[6].$data[7]);
-//		print_r($this);
 		$this->validate();
 	}
 
 	function setValue($value) {
-		 if ($value > 0 && $value < 65536 ) {
+		 if ($value > 0 && $value < 0xFFFF ) {
 			$this->value = $value;
 		 } else {
 			 throw new Exception("Invalid value for Tunnel ID");
@@ -28,15 +27,21 @@ class L2tp_AVP_AssignedTunnelId extends L2tp_AVP {
 	}
 
 	function encode() {
-		throw new Exception("Encode method isn't defined");
+		$flags = 0;
+		if ($this->is_mandatory) {
+			$flags+= 128;
+		}
+		$this->length = 6 + 2; // flags, len, type + value
+		$this->validate();
+		return pack("CCnnn", $flags, $this->length, 0x01, Constants_AvpType::ASSIGNED_TUNNEL_ID_AVP, $this->value);
 	}
 
 	function validate() {
 		if (!$this->is_mandatory) {
-			throw new Exception("Assigned Tunnel ID should be mandatory AVP");
+			throw new Exception_Tunnel("Assigned Tunnel ID should be mandatory AVP");
 		}
 		if ($this->value == 0) {
-			throw new Exception("Assigned Tunnel ID should be greater than 0");
+			throw new Exception_Tunnel("Assigned Tunnel ID should be greater than 0");
 		}
 	}
 }

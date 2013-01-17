@@ -30,8 +30,10 @@ require_once 'Autoloader.php';
 
 spl_autoload_register(array('Autoloader' , 'load'));
 
-Autoloader::registerPath('classes/');
-require_once('l2tp_message_type_avpTest.php');
+Autoloader::registerPath(dirname(__FILE__).'/../classes/');
+
+require_once('L2tp_AVP_MessageTypeTest.php');
+require_once('L2tp_AVP_AssignedTunnelIdTest.php');
 
 
 // подключаем файл с набором тестов
@@ -43,6 +45,7 @@ class Tests {
         $suite = new PHPUnit_Framework_TestSuite('AllMySuite');
         // добавляем набор тестов
 		$suite->addTestSuite('L2tp_AVP_MessageTypeTest');
+		$suite->addTestSuite('L2tp_AVP_AssignedTunnelIdTest');
         return $suite;
     }
 }
