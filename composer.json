@@ -1,0 +1,12 @@
+{
+    "name": "slomakov/L2tpServer",
+    "autoload": {
+        "psr-0": { "L2tpServer\\": ["vendor/slomakov/"] }
+    },
+    "require": {
+    },
+    "require-dev": {
+        "phpunit/phpunit": "3.7.*",
+        "packfire/logger": "dev-master"
+    }
+}

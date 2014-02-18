@@ -1,8 +1,7 @@
-#!/usr/bin/env php
-<?php
-/****
-* This file is part of php-L2tpServer-server.
-* Copyright (C) Sergei Lomakov <sergei@lomakov.net>
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+* This file is a part of php-L2tpServer-server.
+* Copyright (C) "Sergei Lomakov <sergei@lomakov.net>"
 *
 * php-L2tpServer-server is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -17,18 +16,15 @@
 * You should have received a copy of the GNU General Public License
 * along with php-L2tpServer-server.  If not, see <http://www.gnu.org/licenses/>.
 *
-*****/
+-->
+<phpunit verbose="true" bootstrap="./vendor/autoload.php" debug="true">
+	<testsuites>
+		<testsuite name="AVP test suite">
+		    <directory suffix=".php">./tests/AVPs/</directory>
+		</testsuite>
+        <testsuite name="Packets test suite">
+            <directory suffix=".php">./tests/Packets/</directory>
+        </testsuite>
+	</testsuites>
+</phpunit>
 
-define('L2TP_PHP_SERVER_VERSION', 0x00);
-define('L2TP_PHP_SERVER_REVISION', 0x01);
-
-error_reporting(E_ALL);
-ini_set('display_errors', 'On');
-date_default_timezone_set('Europe/Moscow');
-
-require_once('vendor/autoload.php');
-
-use L2tpServer\General\Server as L2TPServer;
-
-$l2tp_server = new L2TPServer();
-$l2tp_server->run();

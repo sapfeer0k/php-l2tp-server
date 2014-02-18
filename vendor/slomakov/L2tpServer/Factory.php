@@ -1,8 +1,6 @@
-#!/usr/bin/env php
 <?php
 /****
 * This file is part of php-L2tpServer-server.
-* Copyright (C) Sergei Lomakov <sergei@lomakov.net>
 *
 * php-L2tpServer-server is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -19,16 +17,21 @@
 *
 *****/
 
-define('L2TP_PHP_SERVER_VERSION', 0x00);
-define('L2TP_PHP_SERVER_REVISION', 0x01);
+namespace L2tpServer;
 
-error_reporting(E_ALL);
-ini_set('display_errors', 'On');
-date_default_timezone_set('Europe/Moscow');
+use L2tpServer\General\CtrlPacket,
+    L2tpServer\General\InfoPacket,
+    L2tpServer\General\Packet;
 
-require_once('vendor/autoload.php');
+class Factory {
 
-use L2tpServer\General\Server as L2TPServer;
-
-$l2tp_server = new L2TPServer();
-$l2tp_server->run();
+	static function createPacket($raw_data) {
+		list( , $byte) = unpack('C', $raw_data[0]);
+        if ($byte & Packet::TYPE_CONTROL) {
+			$packet = new CtrlPacket($raw_data);
+		} else {
+			$packet = new InfoPacket($raw_data);
+		}
+		return $packet;
+	}
+}
