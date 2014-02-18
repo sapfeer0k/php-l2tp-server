@@ -63,9 +63,9 @@ class Client  {
 		}
         $this->setTimeout();
 		$this->packet = $packet;
-		if ($this->packet->packet_type == Packet::TYPE_CONTROL) {
+		if ($this->packet->packetType == Packet::TYPE_CONTROL) {
 			return $this->controlRequest();
-		} elseif ($this->packet->packet_type == Packet::TYPE_DATA) {
+		} elseif ($this->packet->packetType == Packet::TYPE_DATA) {
             $this->logger->info("Receiving data packet");
             return $this->dataRequest();
 		}
@@ -130,7 +130,7 @@ class Client  {
 				break;
 			default:
 				// This is not control tunnel message, let it be handled by session:
-				$tunnel_id = $this->packet->tunnel_id;
+				$tunnel_id = $this->packet->tunnelId;
 		}
 
 		if (isset($this->tunnels[$tunnel_id])) {

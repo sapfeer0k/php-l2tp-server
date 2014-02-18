@@ -36,7 +36,7 @@ class MessageTypeAVP extends BaseAVP {
 			$flags+= 32768;
 		}
 		$this->length = 6 + 2; // flags, len, type + value
-		return pack("CCnnn", $flags, $this->length, 0x01, Constants_AvpType::MESSAGE_TYPE_AVP, $this->value);
+		return pack("CCnnn", $flags, $this->length, 0x01, AvpType::MESSAGE_TYPE_AVP, $this->value);
 		// this AVPs mustn't be hidden
 
 	}

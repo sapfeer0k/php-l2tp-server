@@ -7,9 +7,9 @@ class InfoPacket extends Packet {
 
 	protected $offset_size;
 
-	function __construct($raw_packet=false) {
-		if ($raw_packet) {
-			if (!$this->parse($raw_packet)) {
+	function __construct($rawPacket=false) {
+		if ($rawPacket) {
+			if (!$this->parse($rawPacket)) {
 				throw new Exception("Can't parse packet");
 			}
 		}
@@ -19,41 +19,41 @@ class InfoPacket extends Packet {
 		trigger_error("Warning Method ".__METHOD__." in class ".__CLASS__." hasn't finished");
 		list( , $byte) = unpack('C',$packet[0]);
 		if ($byte & 128 == Packet::TYPE_DATA) {
-			$this->packet_type = Packet::TYPE_DATA;
+			$this->packetType = Packet::TYPE_DATA;
 		} else {
 			throw new Exception("You're trying to parse not a data packet");
 		}
 /*
 		list( , $byte) = unpack('C',$packet[0]);
-		$this->packet_type = ( $byte & 128 ) ? Packet::TYPE_CONTROL : MESSAGE_TYPE_DATA ;
+		$this->packetType = ( $byte & 128 ) ? Packet::TYPE_CONTROL : MESSAGE_TYPE_DATA ;
 		$this->is_length_present = ($byte & 64) ? true : false;
-		if ($this->packet_type == Packet::TYPE_CONTROL && !$this->is_length_present) {
+		if ($this->packetType == Packet::TYPE_CONTROL && !$this->is_length_present) {
 			throw new Exceptions("Length field should be present for Control messages");
 		}
 		// bits 3,4 are ignored
 		$this->is_sequence_present = ($byte & 8) ? true : false;
-		if ($this->packet_type == Packet::TYPE_CONTROL && !$this->is_sequence_present) {
+		if ($this->packetType == Packet::TYPE_CONTROL && !$this->is_sequence_present) {
 			throw new Exceptions("Length field should be present for Control messages");
 		}
 		$this->is_offset_present = ($byte & 2) ? true : false;
-		if ($this->packet_type == Packet::TYPE_CONTROL && $this->is_offset_present) {
+		if ($this->packetType == Packet::TYPE_CONTROL && $this->is_offset_present) {
 			throw new Exceptions("Offset Size field should be 0 for Control messages");
 		}
 		$this->is_prioritized = ($byte & 1) ? true : false;
-		if ($this->packet_type == Packet::TYPE_CONTROL && $this->is_prioritized) {
+		if ($this->packetType == Packet::TYPE_CONTROL && $this->is_prioritized) {
 			throw new Exceptions("Priority field should be 0 for Control messages");
 		}
 		unset($byte);
 		list( , $byte2) = unpack('C',$packet[1]);
-		$this->proto_version = ($byte2 & 15 );
-		if ($this->proto_version != 2) {
-			throw new Exceptions("Unsupported protocol version {$this->proto_version}");
+		$this->protoVersion = ($byte2 & 15 );
+		if ($this->protoVersion != 2) {
+			throw new Exceptions("Unsupported protocol version {$this->protoVersion}");
 		}
 		if ($this->is_length_present) {
 			list( , $this->length) = unpack('n', $packet[2].$packet[3]);
 		}
 		list( , $this->tunnel_id) = unpack('n', $packet[4].$packet[5]);
-		list( , $this->session_id) = unpack('n', $packet[6].$packet[7]);
+		list( , $this->sessionId) = unpack('n', $packet[6].$packet[7]);
 		if ($this->is_sequence_present) {
 			list( , $this->Ns) = unpack('n', $packet[8].$packet[9]);
 			list( , $this->Nr) = unpack('n', $packet[10].$packet[11]);

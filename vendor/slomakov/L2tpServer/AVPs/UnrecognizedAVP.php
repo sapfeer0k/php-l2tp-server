@@ -4,11 +4,15 @@ namespace L2tpServer\AVPs;
 
 class UnrecognizedAVP extends BaseAVP {
 
-	function __construct($data) {
+	public function __construct($data) {
 		$this->parse($data);
 	}
 
-	protected function parse($data) {
+    public function encode() {
+        // this avp can't be encoded
+    }
+
+    protected function parse($data) {
 		list( , $avp_flags_len) = unpack('n', $data[0].$data[1]);
 		$this->is_mandatory = ($avp_flags_len & 32768) ? true : false;
 		$this->validate();
@@ -29,9 +33,5 @@ class UnrecognizedAVP extends BaseAVP {
 	protected function setValue($value) {
 		// this avp isn't recognized and doesn't have values
 		return false;
-	}
-
-	protected function encode() {
-		// this avp can't be encoded
 	}
 }

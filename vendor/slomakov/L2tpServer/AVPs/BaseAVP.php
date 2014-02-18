@@ -13,14 +13,6 @@ abstract class BaseAVP {
 	protected $type;
 	protected $is_ignored;
 
-	protected abstract function parse($data);
-
-	protected abstract function validate();
-
-	protected abstract function setValue($value);
-
-	protected abstract function encode();
-
 	public function __construct($data=false) {
 		$this->is_mandatory = true;
 		$this->is_hidden = false;
@@ -72,4 +64,13 @@ abstract class BaseAVP {
 			}
 		}
 	}
+
+    public abstract function encode();
+
+    protected abstract function parse($data);
+
+    protected abstract function validate();
+
+    protected abstract function setValue($value);
+
 }
