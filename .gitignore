@@ -1,0 +1,11 @@
+.idea/
+composer.lock
+*.log
+vendor/bin 
+vendor/autoload.php
+vendor/bin/
+vendor/composer/
+vendor/packfire/
+vendor/phpunit/
+vendor/psr/
+vendor/symfony/
