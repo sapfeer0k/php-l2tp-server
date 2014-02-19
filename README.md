@@ -15,4 +15,11 @@ Ongoing actions:
 - Write unit test for Receive Window Size AVP
 - Implement Vendor Name AVP
 - Write unit test for Vendor Name AVP
+- Implement Challenge AVP
+- Write unit test for Challenge AVP
+- Implement Tie Breaker AVP
+- Write unit test for Tie Breaker AVP
+- Implement Challenge Response AVP
+- Write unit test for Challenge Response AVP
+
 
