@@ -10,24 +10,58 @@ namespace L2tpServer\AVPs;
 
 use L2tpServer\Constants\AvpType;
 
-class AVPFactory {
-    static function createAVP($params) {
-        $avpRawData = NULL;
-        $avpType = NULL;
-        // --
+class AVPFactory
+{
+
+    public static function createAVP($params)
+    {
         if (isset($params['avp_raw_data'])) {
-            $avpRawData = $params['avp_raw_data'];
-            list( , $first_byte) = unpack('C', $avpRawData[0]);
-            if ( $first_byte & 60 ) { // check for reserved bits
-                $avpType = 'unrecognised';
-            }
-            list( , $avpType) = unpack('n', $avpRawData[4].$avpRawData[5]);
-        } elseif (is_numeric($params) && $params >= 0) {
-            $avpType = $params;
-        } else {
-            throw new \Exception("Unknown parameters for ".__METHOD__.".");
+            return self::import($params['avp_raw_data']);
         }
-        switch($avpType) {
+        if (is_numeric($params) && $params >= 0) { // Create Raw AVP:
+            return self::createNew($params);
+        }
+        throw new \Exception("Unknown parameters for " . __METHOD__ . ".");
+    }
+
+    protected static function import($avpRawData)
+    {
+        list(, $avpType) = unpack('n', $avpRawData[4] . $avpRawData[5]);
+        switch ($avpType) {
+            case AvpType::MESSAGE_TYPE_AVP:
+                $avp = MessageTypeAVP::import($avpRawData);
+                break;
+            case AvpType::PROTOCOL_VERSION_AVP:
+                $avp = ProtocolVersionAVP::import($avpRawData);
+                break;
+            case AvpType::HOSTNAME_AVP:
+                $avp = HostnameAVP::import($avpRawData);
+                break;
+            case AvpType::FRAMING_CAPABILITIES_AVP:
+                $avp = FramingCapabilitiesAVP::import($avpRawData);
+                break;
+            case AvpType::BEARER_CAPABILITIES_AVP:
+                $avp = BearerCapabilitiesAVP::import($avpRawData);
+                break;
+            case AvpType::FIRMWARE_REVISION_AVP:
+                $avp = FirmwareRevisionAVP::import($avpRawData);
+                break;
+            case AvpType::ASSIGNED_TUNNEL_ID_AVP:
+                $avp = AssignedTunnelIdAVP::import($avpRawData);
+                break;
+            case AvpType::RECEIVE_WINDOW_SIZE_AVP:
+                $avp = ReceiveWindowSizeAVP::import($avpRawData);
+                break;
+            default:
+                // default AVPs
+                $avp = UnrecognizedAVP::import($avpRawData);
+        }
+        return $avp;
+    }
+
+    protected static function createNew($avpType)
+    {
+        switch ($avpType) {
             case AvpType::MESSAGE_TYPE_AVP:
                 $avp = new MessageTypeAVP();
                 break;
@@ -54,10 +88,7 @@ class AVPFactory {
                 break;
             default:
                 // default AVPs
-                $avp = new UnrecognizedAVP($avpRawData);
-        }
-        if ($avpRawData) {
-            $avp->import($avpRawData);
+                $avp = new UnrecognizedAVP();
         }
         return $avp;
     }

@@ -25,38 +25,32 @@
  * @author "Sergei Lomakov <sergei@lomakov.net>"
  */
 
-use L2tpServer\AVPs\AssignedTunnelIdAVP;
+use L2tpServer\AVPs\BearerCapabilitiesAVP;
 
-class AssignedTunnelIdAVPTest extends PHPUnit_Framework_TestCase {
+class BearerCapabilitiesTest extends PHPUnit_Framework_TestCase
+{
 
+    public function testConstructor()
+    {
+        // TODO: implement hiding
+        $avp = new BearerCapabilitiesAVP(0);
+        $avp->setValue(0);
+        $this->assertEquals(1, $avp->is_mandatory, "Bearer Capability AVP must be mandatory");
+        $this->assertEquals(\L2tpServer\Constants\AvpType::BEARER_CAPABILITIES_AVP, $avp->type, "Type mismatch for Bearer Capability AVP");
+        return $avp;
+    }
 
-	public function testConstructor() {
-		$avp = new AssignedTunnelIdAVP();
-		$this->assertEquals(true, $avp->is_mandatory);
-	}
+    /**
+     * @depends testConstructor
+     */
+    public function testDecoder($avp)
+    {
+        $rawData = $avp->encode();
+        // test that two objects are equal:
+        $importedAvp = BearerCapabilitiesAVP::import($rawData);
+        $this->assertEquals($avp, $importedAvp, "Decoder doesn't work in Bearer Capabilities AVP");
+    }
 
-	/**
-	 * @dataProvider providerProperValues
-	 */
-	public function testEncode($tunnel_id) {
-        return ;
-		$avp = new AssignedTunnelIdAVP();
-		if ($tunnel_id == 0) {
-			$this->setExpectedException('Exception');
-		}
-		$avp->setValue($tunnel_id);
-		$binary_data = $avp->encode();
-		$test_avp = new AssignedTunnelIdAVP($binary_data);
-		$this->assertEquals($tunnel_id, $test_avp->value);
-	}
-
-	// Data providers:
-	public function providerProperValues() {
-		for($value=0; $value < 0xFFFF; $value+=mt_rand(1,500)) {
-			$tids[] = array($value);
-		}
-		return $tids;
-	}
 }
 
 ?>

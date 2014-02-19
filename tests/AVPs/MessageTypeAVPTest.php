@@ -42,7 +42,7 @@ class MessageTypeAVPTest extends PHPUnit_Framework_TestCase
 	 */
 	public function testValue($value) {
 		$avp = new MessageTypeAVP();
-		if ($value <0 || $value > 65535) {
+		if ($value < 0 || $value > 65535) {
 			$this->setExpectedException('Exception');
 		}
 		$avp->setValue($value);
@@ -52,23 +52,21 @@ class MessageTypeAVPTest extends PHPUnit_Framework_TestCase
 	 * @dataProvider providerTypes
 	 */
 	public function testEncode($message_type) {
-        return true;
 		$avp = new MessageTypeAVP();
-
 		$avp->setValue($message_type);
 		$binary_data = $avp->encode();
-		$test_avp = new MessageTypeAVP($binary_data);
-		$this->assertEquals($message_type, $test_avp->value);
-		$this->assertEquals(false, $test_avp->is_hidden);
+        // checks:
+        $test_avp = MessageTypeAVP::import($binary_data);
+		$this->assertEquals($avp, $test_avp);
 	}
 
 	// Providers
 	public function providerTypes() {
-		$class = new ReflectionClass('\L2tpServer\Constants\AvpType');
-		$values = $class->getConstants();
-		foreach($values as $value) {
-			$message_types[] = array($value);
-		}
+        // 0-16 allowed
+        $message_types = array();
+        for($i=0; $i<=16; $i++) {
+            $message_types[] = array($i);
+        }
 		return $message_types;
 	}
 

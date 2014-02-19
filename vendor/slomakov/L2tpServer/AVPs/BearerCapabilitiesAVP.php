@@ -2,40 +2,58 @@
 
 namespace L2tpServer\AVPs;
 
-class BearerCapabilitiesAVP extends BaseAVP {
+use L2tpServer\Constants\AvpType;
+use L2tpServer\Exceptions\AVPException;
 
-	protected function parse($data) {
-		list( , $avp_flags_len) = unpack('n', $data[0].$data[1]);
-		$this->is_mandatory = ($avp_flags_len & 32768) ? true : false;
-		$this->is_hidden = ($avp_flags_len & 16384) ? true : false;
-		$this->length = ($avp_flags_len & 1023);
-		if ($this->length != 10 ) {
-			throw new Exception("Invalid length for Bearer Capabilities AVP!");
-		}
-		list( , $this->vendor_id) = unpack('n', $data[2].$data[3]);
-		list( , $this->type) = unpack('n', $data[4].$data[5]);
-		$this->value = array();
-		list( , $flag_byte) = unpack('C', $data[9]);
+class BearerCapabilitiesAVP extends BaseAVP
+{
 
-		$this->value["analog"] = ($flag_byte & 2) ? true : false;
-		$this->value["digital"] = ($flag_byte & 1) ? true : false;
-		$this->validate();
-	}
+    public function __construct($isHidden=0)
+    {
+        $this->type = AvpType::BEARER_CAPABILITIES_AVP;
+        $this->is_mandatory = 1;
+        $this->is_hidden = $isHidden;
+        parent::__construct();
+    }
 
-	function setValue($value) {
-		// this value is readonly!
-		$this->value = array("analog" => 0, "digital" => 0 );
+    public function setValue($nothing)
+    {
+        // this value is readonly!
+        $this->value = array("analog" => 0, "digital" => 0);
         return true;
-	}
+    }
 
-	function encode() {
-		throw new Exception("Encode method isn't defined");
-	}
+    public static function import($data)
+    {
+        $avp = new self();
+        list(, $avp_flags_len) = unpack('n', $data[0] . $data[1]);
+        $avp->is_mandatory = ($avp_flags_len & 32768) ? 1 : 0;
+        $avp->is_hidden = ($avp_flags_len & 16384) ? 1 : 0;
+        $avp->length = ($avp_flags_len & 1023);
+        if (!$avp->is_hidden && $avp->length != 10) {
+            throw new AVPException("Invalid length: {$avp->length} for Bearer Capabilities AVP!");
+        }
+        list(, $avp->vendor_id) = unpack('n', $data[2] . $data[3]);
+        list(, $avp->type) = unpack('n', $data[4] . $data[5]);
+        $avp->value = array();
+        list(, $flag_byte) = unpack('C', $data[9]);
 
-	function validate() {
-#			if (!$this->value['sync']) {
-#				throw new Exceptions("No available Framing Capabilites for this connection!");
-#			}
-	}
+        $avp->value["analog"] = ($flag_byte & 2) ? 1 : 0;
+        $avp->value["digital"] = ($flag_byte & 1) ? 1 : 0;
+        $avp->validate();
+        return $avp;
+    }
 
+    protected function validate()
+    {
+        if (!$this->is_mandatory) {
+            throw new \Exception("Avp {$this->type} must be MANDATORY");
+        }
+    }
+
+    protected function getEncodedValue()
+    {
+        $value = $this->value['analog'] << 2 + $this->value['digital'];
+        return pack('nn', 0, $value);
+    }
 }

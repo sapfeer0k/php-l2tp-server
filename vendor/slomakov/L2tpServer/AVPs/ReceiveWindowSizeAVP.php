@@ -21,24 +21,36 @@
 
 namespace L2tpServer\AVPs;
 
-class ReceiveWindowSizeAVP extends BaseAVP {
-	//put your code here
+use L2tpServer\Constants\AvpType;
 
-	protected function parse($data) {
+class ReceiveWindowSizeAVP extends BaseAVP
+{
+
+    public function __construct()
+    {
+        $this->type = AvpType::RECEIVE_WINDOW_SIZE_AVP;
+        $this->is_mandatory = 1;
+        $this->is_hidden = 0;
+        parent::__construct();
+    }
+
+	public static function import($data) {
+        $avp = new self();
 		list( , $avp_flags_len) = unpack('n', $data[0].$data[1]);
-		$this->is_mandatory = ($avp_flags_len & 32768) ? true : false;
-		$this->is_hidden = ($avp_flags_len & 16384) ? true : false;
-		$this->length = ($avp_flags_len & 1023);
-		if ($this->length != 8 ) {
+		$avp->is_mandatory = ($avp_flags_len & 32768) ? true : false;
+		$avp->is_hidden = ($avp_flags_len & 16384) ? true : false;
+		$avp->length = ($avp_flags_len & 1023);
+		if ($avp->length != 8 ) {
 			throw new Exception_IgnoreAVP("Invalid length for Receive Window Size AVP");
 		}
-		list( , $this->vendor_id) = unpack('n', $data[2].$data[3]);
-		list( , $this->type) = unpack('n', $data[4].$data[5]);
-		list( , $this->value) = unpack('n', $data[6].$data[7]);
-		$this->validate();
+		list( , $avp->vendor_id) = unpack('n', $data[2].$data[3]);
+		list( , $avp->type) = unpack('n', $data[4].$data[5]);
+		list( , $avp->value) = unpack('n', $data[6].$data[7]);
+		$avp->validate();
+        return $avp;
 	}
 
-	function setValue($value) {
+	public function setValue($value) {
 		if ($value > 0 && $value < 0xFFFF) {
 			$this->value = $value;
 		} else {
@@ -47,11 +59,12 @@ class ReceiveWindowSizeAVP extends BaseAVP {
 		return true;
 	}
 
-	function encode() {
-		throw new Exception("Encode method isn't defined");
-	}
+    protected function getEncodedValue()
+    {
+        return pack('n', $this->value);
+    }
 
-	function validate() {
+	protected function validate() {
 		if (!$this->is_mandatory) {
 			throw new Exception_IgnoreAVP("Receive Window Size AVP should not be mandatory.");
 		}

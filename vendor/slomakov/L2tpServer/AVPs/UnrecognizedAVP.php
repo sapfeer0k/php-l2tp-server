@@ -2,36 +2,48 @@
 
 namespace L2tpServer\AVPs;
 
-class UnrecognizedAVP extends BaseAVP {
+use L2tpServer\Exceptions\AVPException;
 
-	public function __construct($data) {
-		$this->parse($data);
-	}
+class UnrecognizedAVP extends BaseAVP
+{
 
-    public function encode() {
-        // this avp can't be encoded
+    public function __construct()
+    {
+        $this->type = -1;
     }
 
-    protected function parse($data) {
-		list( , $avp_flags_len) = unpack('n', $data[0].$data[1]);
-		$this->is_mandatory = ($avp_flags_len & 32768) ? true : false;
-		$this->validate();
-	}
+    public static function import($data)
+    {
+        $avp = new self();
+        list(, $avp_flags_len) = unpack('n', $data[0] . $data[1]);
+        $avp->is_mandatory = ($avp_flags_len & 32768) ? true : false;
+        $avp->validate();
+        return $avp;
+    }
 
-	function isIgnored() {
-		return $this->is_ignored;
-	}
+    public function isIgnored()
+    {
+        return $this->is_ignored;
+    }
 
-	protected function validate() {
-		if ($this->is_mandatory) {
-			throw new Exception("Unknown mandatory AVP!");
-		} else {
-			$this->is_ignored = true;
-		}
-	}
+    public function setValue($value)
+    {
+        // this avp isn't recognized and doesn't have values
+        throw new AVPException("You can't change value for unknown AVP");
+    }
 
-	protected function setValue($value) {
-		// this avp isn't recognized and doesn't have values
-		return false;
-	}
+    protected function validate()
+    {
+        if ($this->is_mandatory) {
+            throw new AVPException("Unknown mandatory AVP!");
+        } else {
+            $this->is_ignored = true;
+        }
+    }
+
+    protected function getEncodedValue()
+    {
+        throw new AVPException("You can't get encoded value for unknown AVP");
+    }
+
 }

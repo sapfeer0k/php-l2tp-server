@@ -82,7 +82,6 @@ class CtrlPacket extends Packet {
             list( , $avp_bytes) = unpack('n', $payload[0].$payload[1]);
             $avp_len = $avp_bytes & 1023;
             $avp_raw_data = substr($payload, 0, $avp_len);
-
             try {
                 $this->avps[] = AVPFactory::createAVP(array('avp_raw_data' => $avp_raw_data));
             } catch (IgnoreAVPException $e) {

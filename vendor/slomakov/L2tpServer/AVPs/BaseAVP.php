@@ -4,73 +4,73 @@ namespace L2tpServer\AVPs;
 
 use L2tpServer\Exceptions\AVPException;
 
-abstract class BaseAVP {
-	protected $is_mandatory;
-	protected $is_hidden;
-	protected $value;
-	protected $length;
-	protected $vendor_id;
-	protected $type;
-	protected $is_ignored;
 
-	public function __construct($data=false) {
-		$this->is_mandatory = true;
-		$this->is_hidden = false;
-		$this->is_ignored = false;
-        if ($data) {
-            $this->import($data);
-        }
-	}
+abstract class BaseAVP
+{
+    protected $is_mandatory;
+    protected $is_hidden;
+    protected $value;
+    protected $length;
+    protected $vendor_id;
+    protected $type;
+    protected $is_ignored;
 
-    public function import($data)
+    public function __construct()
     {
-        if($data) {
-            if (strlen($data) >= 6) {
-                $this->parse($data);
-            } else {
-                throw new AVPException("AVP length can't be less than 6 bytes!");
-            }
-        } else {
-            throw new AVPException("AVP data must be present!");
+        if ($this->type === NULL) {
+            throw new AVPException("Type must be defined in every AVP");
         }
+        $this->vendor_id = 0x01;
     }
 
-	public function isIgnored() {
-		return $this->is_ignored;
-	}
+    public abstract static function import($data);
 
-	public function __get($name) {
-		if (method_exists($this, ($method = 'get'.ucfirst($name)))) {
-			return $this->$method;
-		} else {
-			if (property_exists($this, $name)) {
-				return $this->$name;
-			} else {
-				throw new Exception("You're trying to read property '$name' which doesn't exist");
-			}
-		}
-		return NULL;
-	}
+    public function isIgnored()
+    {
+        return $this->is_ignored;
+    }
 
-	public function __set($name, $value) {
-		if (method_exists($this, ($method = 'set'.ucfirst($name)))) {
-			return $this->$method($value);
-		} else {
-			if (property_exists($this, $name)) {
-				trigger_error("Setter in ".__CLASS__." is unsafe. Pls fix me\n");
-				$this->$name = $value;
-			} else {
-				throw new Exception("You're trying to change property '$name' which doesn't exist");
-			}
-		}
-	}
+    public function __get($name)
+    {
+        if (method_exists($this, ($method = 'get' . ucfirst($name)))) {
+            return $this->$method;
+        }
+        if (!property_exists($this, $name)) {
+            throw new AVPException("You're trying to read property '$name' which doesn't exist");
+        }
+        return $this->$name;
+    }
 
-    public abstract function encode();
+    public function encode()
+    {
+        if ($this->type === null) {
+            throw new AVPException("AVP type must be defined");
+        }
+        if ($this->value === NULL) {
+            throw new AVPException("Value is not defined for AVP type {$this->type}");
+        }
+        $flags = 0;
+        if ($this->is_mandatory) {
+            $flags += 32768;
+        }
+        if ($this->is_hidden) {
+            throw new \Exception("Implement hidden encoding for AVP");
+            $flags += 16384;
+        }
+        if ($this->length > pow(2, 10)) {
+            throw new \Exception("Length too big");
+        }
 
-    protected abstract function parse($data);
+        $payload = pack('nn', 0x01, $this->type) .  $this->getEncodedValue();
+        $this->length = 2 + mb_strlen($payload); // first two bytes + all other data
+        $flags += $this->length;
+        return pack("n", $flags) . $payload;
+    }
+
+    public abstract function setValue($value);
+
+    protected abstract function getEncodedValue();
 
     protected abstract function validate();
-
-    protected abstract function setValue($value);
 
 }

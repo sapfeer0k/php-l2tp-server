@@ -5,23 +5,34 @@ namespace L2tpServer\AVPs;
 use L2tpServer\Exceptions\AVPException;
 use L2tpServer\Constants\AvpType;
 
-class AssignedTunnelIdAVP extends BaseAVP {
+class AssignedTunnelIdAVP extends BaseAVP 
+{
+    public function __construct($is_hidden=false)
+    {
+        $this->is_mandatory = 1;
+        $this->is_hidden = $is_hidden;
+        $this->type = AvpType::ASSIGNED_TUNNEL_ID_AVP;
+    }
 
-	protected function parse($data) {
+    public static function import($data) 
+    {
+        $avp = new self();
 		list( , $avp_flags_len) = unpack('n', $data[0].$data[1]);
-		$this->is_mandatory = ($avp_flags_len & 32768) ? true : false;
-		$this->is_hidden = ($avp_flags_len & 16384) ? true : false;
-		$this->length = ($avp_flags_len & 1023);
-		if ($this->length != 8 ) {
+		$avp->is_mandatory = ($avp_flags_len & 32768) ? true : false;
+		$avp->is_hidden = ($avp_flags_len & 16384) ? true : false;
+		$avp->length = ($avp_flags_len & 1023);
+		if (!$avp->is_hidden && $avp->length != 8 ) {
 			throw new AVPException("Invalid length for Assigned Tunnel ID AVP");
 		}
-		list( , $this->vendor_id) = unpack('n', $data[2].$data[3]);
-		list( , $this->type) = unpack('n', $data[4].$data[5]);
-		list( , $this->value) = unpack('n', $data[6].$data[7]);
-		$this->validate();
+		list( , $avp->vendor_id) = unpack('n', $data[2].$data[3]);
+		list( , $avp->type) = unpack('n', $data[4].$data[5]);
+		list( , $avp->value) = unpack('n', $data[6].$data[7]);
+		$avp->validate();
+        return $avp;
 	}
 
-	function setValue($value) {
+    public function setValue($value) 
+    {
 		 if ($value > 0 && $value < 0xFFFF ) {
 			$this->value = $value;
 		 } else {
@@ -30,17 +41,13 @@ class AssignedTunnelIdAVP extends BaseAVP {
 		 return true;
 	}
 
-	function encode() {
-		$flags = 0;
-		if ($this->is_mandatory) {
-			$flags+= 128;
-		}
-		$this->length = 6 + 2; // flags, len, type + value
-		$this->validate();
-		return pack("CCnnn", $flags, $this->length, 0x01, AvpType::ASSIGNED_TUNNEL_ID_AVP, $this->value);
+    protected function getEncodedValue() 
+    {
+        return pack('n', $this->value);
 	}
 
-	function validate() {
+    public function validate() 
+    {
 		if (!$this->is_mandatory) {
 			throw new TunnelException("Assigned Tunnel ID should be mandatory AVP");
 		}
