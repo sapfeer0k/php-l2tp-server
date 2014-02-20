@@ -7,7 +7,7 @@ use L2tpServer\Exceptions\AVPException;
 
 class FirmwareRevisionAVP extends BaseAVP
 {
-    public function __construct($isHidden = false)
+    public function __construct($isHidden = 0)
     {
         $this->type = AvpType::FIRMWARE_REVISION_AVP;
         $this->is_mandatory = 0;
@@ -19,8 +19,8 @@ class FirmwareRevisionAVP extends BaseAVP
     {
         $avp = new self();
         list(, $avp_flags_len) = unpack('n', $data[0] . $data[1]);
-        $avp->is_mandatory = ($avp_flags_len & 32768) ? true : false;
-        $avp->is_hidden = ($avp_flags_len & 16384) ? true : false;
+        $avp->is_mandatory = ($avp_flags_len & 32768) ? 1 : 0;
+        $avp->is_hidden = ($avp_flags_len & 16384) ? 1 : 0;
         $avp->length = ($avp_flags_len & 1023);
         if ($avp->length != 8) {
             throw new AVPException("Invalid length for Firmware Revision");
@@ -37,7 +37,7 @@ class FirmwareRevisionAVP extends BaseAVP
         if ($value >= 0 && $value < 65535) {
             $this->value = $value;
         } else {
-            throw new Exception("Invalid value for Firmware Revision");
+            throw new AVPException("Invalid value for Firmware Revision");
         }
         return true;
     }
@@ -50,7 +50,7 @@ class FirmwareRevisionAVP extends BaseAVP
     protected function validate()
     {
         if ($this->is_mandatory) {
-            throw new Exception("Firmware Revision should not be mandatory!");
+            throw new AVPException("Firmware Revision should not be mandatory!");
         }
     }
 }

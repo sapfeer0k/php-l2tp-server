@@ -29,7 +29,7 @@ class UnrecognizedAVP extends BaseAVP
     public function setValue($value)
     {
         // this avp isn't recognized and doesn't have values
-        throw new AVPException("You can't change value for unknown AVP");
+        throw new AVPException("You can't change value for unrecognized AVP");
     }
 
     protected function validate()
@@ -43,7 +43,7 @@ class UnrecognizedAVP extends BaseAVP
 
     protected function getEncodedValue()
     {
-        throw new AVPException("You can't get encoded value for unknown AVP");
+        throw new AVPException("You can't get encoded value for unrecognized AVP");
     }
 
 }
