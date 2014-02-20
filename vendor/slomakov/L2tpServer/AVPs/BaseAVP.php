@@ -20,7 +20,7 @@ abstract class BaseAVP
         if ($this->type === NULL) {
             throw new AVPException("Type must be defined in every AVP");
         }
-        $this->vendor_id = 0x01;
+        $this->vendor_id = 0;
     }
 
     public abstract static function import($data);
@@ -61,7 +61,7 @@ abstract class BaseAVP
             throw new \Exception("Length too big");
         }
 
-        $payload = pack('nn', 0x01, $this->type) .  $this->getEncodedValue();
+        $payload = pack('nn', $this->vendor_id, $this->type) .  $this->getEncodedValue();
         $this->length = 2 + mb_strlen($payload); // first two bytes + all other data
         $flags += $this->length;
         return pack("n", $flags) . $payload;

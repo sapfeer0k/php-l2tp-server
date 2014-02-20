@@ -50,8 +50,11 @@ class PacketFactoryTest extends PHPUnit_Framework_TestCase
         //var_dump($packet);die();
         //$this->markTestIncomplete("Please, add more check here!");
         $rawCustomData = $packet->encode();
-        $rawData = file_get_contents(dirname(__FILE__) . '/1.raw');
-        $this->assertEquals(md5($rawData), md5($rawCustomData), "Encoding process doesn't work well!");
+        $this->assertEquals(mb_strlen(file_get_contents(dirname(__FILE__) . '/1.raw')), mb_strlen($rawCustomData), "Packets length mismatching");
+        $new_packet = Factory::createPacket($rawCustomData);
+        $this->assertEquals($packet, $new_packet, "Packets mistmaching!");
+        //$rawData = ;
+        //$this->assertEquals(md5($rawData), md5($rawCustomData), "Encoding process doesn't work well!");
     }
 
     protected function getPacket()

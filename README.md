@@ -7,13 +7,11 @@ The code is published under the GPLv3. Feel free to use it.
 Ongoing actions:
 ---
 
-- Write unit test for Firmware revision AVP
 - Write unit test for Host name AVP
 - Write unit test for Unrecognized AVP
 - Write unit test for Framing Capabilties AVP
 - Write unit test for Protocol Version AVP
 - Write unit test for Receive Window Size AVP
-- Implement Vendor Name AVP
 - Write unit test for Vendor Name AVP
 - Implement Challenge AVP
 - Write unit test for Challenge AVP

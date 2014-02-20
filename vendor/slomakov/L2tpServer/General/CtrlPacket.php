@@ -106,7 +106,7 @@ class CtrlPacket extends Packet {
             $packetData .= $avp->encode();
         }
         $header = $this->formatHeader(mb_strlen($packetData)); // encode header
-        $this->length = mb_strlen($header);
+        $this->length = mb_strlen($header . $packetData);
 		return $header . $packetData;
 	}
 

@@ -52,8 +52,12 @@ class AVPFactory
             case AvpType::RECEIVE_WINDOW_SIZE_AVP:
                 $avp = ReceiveWindowSizeAVP::import($avpRawData);
                 break;
+            case AvpType::VENDOR_NAME_AVP:
+                $avp = VendorNameAVP::import($avpRawData);
+                break;
             default:
                 // default AVPs
+                var_dump($avpType);
                 $avp = UnrecognizedAVP::import($avpRawData);
         }
         return $avp;
@@ -85,6 +89,9 @@ class AVPFactory
                 break;
             case AvpType::RECEIVE_WINDOW_SIZE_AVP:
                 $avp = new ReceiveWindowSizeAVP();
+                break;
+            case AvpType::VENDOR_NAME_AVP:
+                $avp = new VendorNameAVP();
                 break;
             default:
                 // default AVPs
