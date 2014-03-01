@@ -115,7 +115,7 @@ class CtrlPacket extends Packet {
         if (!is_numeric($nS) && $nS < 0) {
             throw new \Exception("Nr must be greater or euqual than 0");
         }
-        $this->Ns = $nS;
+        $this->Ns = $nS % 65536;
     }
 
     public function setNr($nR)
@@ -123,7 +123,7 @@ class CtrlPacket extends Packet {
         if (!is_numeric($nR) && $nR < 0) {
             throw new \Exception("Nr must be greater or euqual than 0");
         }
-        $this->Nr = $nR;
+        $this->Nr = $nR % 65536;
     }
 
     public function setTunnelId($tunnelId)

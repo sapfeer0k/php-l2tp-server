@@ -39,6 +39,8 @@ class Client  {
 	private $tunnels;
     private $timeout;
     protected $logger;
+    protected $receivedNumber = 0;
+    protected $sentNumber = 0;
 
 	function __construct($remote_addr, $remote_port) {
 		if (filter_var($remote_addr, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
@@ -86,6 +88,11 @@ class Client  {
         /* @var $this->packet CtrlPacket */
         $this->logger->info("Receiving control packet");
 		$message_type = $this->packet->getAVP(AvpType::MESSAGE_TYPE_AVP)->value;
+        $this->receivedNumber = ($this->receivedNumber + 1) % 65536; // We'v got a new message
+        if ($this->sentNumber != ($this->packet->Nr + 1) % 65536) {
+            echo "Warning! sent number of messages doesn't match to received number of messages";
+            $this->sentNumber = ($this->packet->Nr + 1) % 65536;
+        }
 		switch($message_type) {
 			case MT_SCCRQ:
 				// AVPs that must be present:
@@ -106,6 +113,8 @@ class Client  {
 				// Tie Breaker, Firmware Revision , Vendor Name
                 /* build response: */
                 $responsePacket = new CtrlPacket();
+                $responsePacket->setNs($this->sentNumber);
+                $responsePacket->setNr($this->receivedNumber);
                 // Add message type:
                 $avp = AVPFactory::createAVP(AvpType::MESSAGE_TYPE_AVP);
                 $avp->setValue(MT_SCCRP);
