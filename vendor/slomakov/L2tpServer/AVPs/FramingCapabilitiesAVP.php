@@ -12,7 +12,7 @@ class FramingCapabilitiesAVP extends BaseAVP
         $this->is_hidden = $isHidden;
         $this->is_mandatory = 1;
         $this->type = AvpType::FRAMING_CAPABILITIES_AVP;
-		$this->value = array("sync" => 1, "async" => 0 ); // readonly value!
+		$this->value = array("async" => 0, "sync" => 0, ); // readonly value!
     }
 
     public static function import($data) {
@@ -41,9 +41,12 @@ class FramingCapabilitiesAVP extends BaseAVP
 	}
 
 	public function validate() {
+        // TODO: do we really need this check?
+        /*
 			if (!$this->value['sync']) {
 				throw new AVPException("No available Framing Capabilites for this connection!");
 			}
+        */
     }
 
     protected function getEncodedValue()

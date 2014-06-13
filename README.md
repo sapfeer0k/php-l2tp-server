@@ -19,5 +19,6 @@ Ongoing actions:
 - Write unit test for Tie Breaker AVP
 - Implement Challenge Response AVP
 - Write unit test for Challenge Response AVP
-
+- Implement Start-Control-Connection-Connected packet
+- Implement ZLB ACK handling
 

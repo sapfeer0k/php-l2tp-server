@@ -53,7 +53,7 @@ class BearerCapabilitiesAVP extends BaseAVP
 
     protected function getEncodedValue()
     {
-        $value = $this->value['analog'] << 2 + $this->value['digital'];
+        $value = $this->value['analog'] << 1 + $this->value['digital'];
         return pack('nn', 0, $value);
     }
 }

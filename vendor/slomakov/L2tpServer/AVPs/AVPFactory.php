@@ -95,6 +95,7 @@ class AVPFactory
                 break;
             default:
                 // default AVPs
+                throw new \Exception("Trying to create unknown AVP");
                 $avp = new UnrecognizedAVP();
         }
         return $avp;

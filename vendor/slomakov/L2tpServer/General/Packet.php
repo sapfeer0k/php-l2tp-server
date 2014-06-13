@@ -29,9 +29,16 @@ abstract class Packet {
 			}
 		}
 	}
+
+    public function getType()
+    {
+        return $this->packetType;
+    }
+
 	// Return packet properties encoded as raw string:
     public abstract function encode();
 
+    public abstract function getAVP($type);
 
     /**
      * @param $name name of property to return
@@ -49,11 +56,6 @@ abstract class Packet {
 			}
 		}
 	}
-
-    /**
-     * @return Packet instance with this class used as parent
-     */
-    abstract public static function create();
 
     /**
      * @param $packet

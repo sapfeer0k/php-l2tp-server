@@ -36,7 +36,6 @@ class CtrlPacket extends Packet {
     const TRUE = 1;
     const FALSE = 0;
 
-	protected $message_type;
 	protected $avps = array();
 
 	public function __construct($rawPacket=false) {
@@ -91,10 +90,9 @@ class CtrlPacket extends Packet {
 
             unset($avp_len, $avp_bytes);
         }
-        if ($this->avps[0]->type == AvpType::MESSAGE_TYPE_AVP) {
-            $this->message_type = $this->avps[0]->value;
-        } else {
+        if ($this->avps[0]->type != AvpType::MESSAGE_TYPE_AVP) {
             throw new TunnelException("Message type AVP not found in the packet");
+            //$this->message_type = $this->avps[0]->value;
         }
     }
 
@@ -141,6 +139,10 @@ class CtrlPacket extends Packet {
         return new self();
     }
 
+    /**
+     * @param $type
+     * @return BaseAVP
+     */
     public function getAVP($type) {
         foreach($this->avps as $avp) {
             if ($avp->type == $type) {
@@ -162,8 +164,8 @@ class CtrlPacket extends Packet {
         $firstByte += $this->isOffsetPresent * 2;
         $firstByte += $this->isPrioritized;
 
-        $header .= chr($firstByte);
-        $header .= chr(2); // proto version
+        $header .= pack('C', $firstByte);
+        $header .= pack('C', 2); // proto version
         $header .= pack('n', 0); // two bytes will be replaced by length
         $header .= pack('n', (int)$this->tunnelId);
         $header .= pack('n', (int)$this->sessionId);
@@ -184,8 +186,6 @@ class CtrlPacket extends Packet {
     protected function parseHeader($packet)
     {
         list( , $byte) = unpack('C',$packet[0]);
-        //var_dump(decbin($byte));
-        //die('there');
         if (($byte & 128) == Packet::TYPE_CONTROL) {
             $this->packetType = Packet::TYPE_CONTROL;
         } else {
@@ -217,12 +217,18 @@ class CtrlPacket extends Packet {
         if ($this->isLengthPresent) { // actually it is always must be present, but double check :-)
             list( , $this->length) = unpack('n', $packet[2].$packet[3]);
         }
-        list( , $this->tunnelId) = (int) array_shift(unpack('n', $packet[4].$packet[5]));
+        list( , $this->tunnelId) = unpack('n', $packet[4].$packet[5]);
         list( , $this->sessionId) = unpack('n', $packet[6].$packet[7]);
         if ($this->isSequencePresent) { // actually it is always must be present, but double check :-)
             list( , $this->Ns) = unpack('n', $packet[8].$packet[9]);
             list( , $this->Nr) = unpack('n', $packet[10].$packet[11]);
         }
+    }
+
+    public function getAVPS()
+    {
+        // DEBUG METHOD ONLY
+        return $this->avps;
     }
 
 }

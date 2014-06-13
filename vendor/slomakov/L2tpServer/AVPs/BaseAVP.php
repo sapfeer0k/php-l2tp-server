@@ -23,7 +23,10 @@ abstract class BaseAVP
         $this->vendor_id = 0;
     }
 
-    public abstract static function import($data);
+    public static function import($data)
+    {
+        throw new \Exception("You must override method " . (get_class() . '::import()'));
+    }
 
     public function isIgnored()
     {
