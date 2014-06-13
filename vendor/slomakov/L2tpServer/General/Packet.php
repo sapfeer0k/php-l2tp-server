@@ -52,7 +52,7 @@ abstract class Packet {
 			if (property_exists($this, $name)) {
 				return $this->$name;
 			} else {
-				throw new Exception("You're trying to read property '$name' which doesn't exist");
+				throw new \Exception("You're trying to read property '$name' which doesn't exist");
 			}
 		}
 	}

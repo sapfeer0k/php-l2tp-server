@@ -55,10 +55,22 @@ class AVPFactory
             case AvpType::VENDOR_NAME_AVP:
                 $avp = VendorNameAVP::import($avpRawData);
                 break;
+            case AvpType::ASSIGNED_SESSION_ID_AVP:
+                $avp = AssignedSessionIdAVP::import($avpRawData);
+                break;
+            case AvpType::CALL_SERIAL_NUMBER_AVP:
+                $avp = CallSerialNumberAVP::import($avpRawData);
+                break;
+            case AvpType::BEARER_TYPE_AVP:
+                $avp = BearerTypeAVP::import($avpRawData);
+                break;
+            case AvpType::RESULT_CODE_AVP:
+                $avp = new ResultCodeAVP();
+                break;
             default:
                 // default AVPs
-                var_dump($avpType);
-                $avp = UnrecognizedAVP::import($avpRawData);
+                throw new \Exception("Unknown AVP with type: " . $avpType);
+                //$avp = UnrecognizedAVP::import($avpRawData);
         }
         return $avp;
     }
@@ -92,6 +104,12 @@ class AVPFactory
                 break;
             case AvpType::VENDOR_NAME_AVP:
                 $avp = new VendorNameAVP();
+                break;
+            case AvpType::ASSIGNED_SESSION_ID_AVP:
+                $avp = new AssignedSessionIdAVP();
+                break;
+            case AvpType::RESULT_CODE_AVP:
+                $avp = new ResultCodeAVP();
                 break;
             default:
                 // default AVPs

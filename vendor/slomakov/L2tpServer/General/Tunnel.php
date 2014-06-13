@@ -21,66 +21,115 @@
 
 namespace L2tpServer\General;
 
-use L2tpServer\Constants\TunnelStates,
-    L2tpServer\Constants\AvpType,
-    L2tpServer\AVPs\AVPFactory;
+use L2tpServer\AVPs\AVPFactory;
+use L2tpServer\Constants\AvpType;
+use L2tpServer\Constants\Protocol;
+use L2tpServer\Constants\TunnelState;
+use Packfire\Logger\File as Logger;
 
-class Tunnel {
+class Tunnel
+{
 
-	private $id;
-	private $state;
+    private $id;
+    private $internalId;
+    private $sessions;
+    // TODO: implement all tunnel properties here
+    /* @var Logger */
+    private $logger;
 
-	function __construct($tunnel_id) {
-		// no problem with avps:
-		$this->id = $tunnel_id;
-		$this->state = TunnelStates::TUNNEL_STATE_SCCRQ;
-	}
+    public function __construct($tunnelId, $internalId)
+    {
+        // no problem with avps:
+        $this->id = $tunnelId;
+        $this->internalId = $internalId;
+        $this->logger = new Logger('server.log');
+        $this->sessions = array();
+    }
 
-	function processRequest($avps) {
-		switch($this->state) {
-			case TunnelStates::TUNNEL_STATE_NULL:
-				// How we can get here ? No tunnel, no packets , exception ?
-			break;
-			case TunnelStates::TUNNEL_STATE_SCCRQ: // We've got a request, let's answer then? :-)
-				return $this->sendSCCRP();
-			break;
-			case TunnelStates::TUNNEL_STATE_SCCRP:
-			break;
-			case TunnelStates::TUNNEL_STATE_SCCCN:
-			break;
-			case TunnelStates::TUNNEL_STATE_STOPCCN:
-			break;
-			case TunnelStates::TUNNEL_STATE_HELLO:
-			break;
-			default:
-				// ? Unknown state!
-		}
-		return ; // what do ween to return ? packet, Cap ;)
-	}
+    /**
+     * @param CtrlPacket $packet
+     * @return CtrlPacket|null
+     * @throws \Exception
+     */
+    public function processRequest(CtrlPacket $packet)
+    {
+        $messageType = $packet->getAvp(AvpType::MESSAGE_TYPE_AVP)->value;
+        switch ($messageType) {
+            case MT_SCCRQ: // We've got a request, let's answer then? :-)
+                $this->logger->info("[TUNNEL] Start-Control-Connection-Request");
+                $responsePacket = $this->generateSCCRP();
+                break;
+            case MT_SCCCN:
+                $this->logger->info("[TUNNEL] Start-Control-Connection-Connected");
+                $responsePacket = $this->generateZLB();
+                break;
+            default:
+                $sessionId = $packet->sessionId;
+                if ($messageType == MT_ICRQ) {
+                    $serverSessionId = count($this->sessions) + 1;
+                    $sessionId = $packet->getAVP(AvpType::ASSIGNED_SESSION_ID_AVP)->value;
+                    $this->sessions[$serverSessionId] = new Session($sessionId, $serverSessionId);
+                }
+                if (!$sessionId) {
+                    throw new \Exception("Session not defined");
+                }
+                $responsePacket = $this->sessions[$sessionId]->processRequest($packet);
+        }
+        $responsePacket->setTunnelId($this->getId());
+        return $responsePacket; // what do ween to return ? packet, Cap ;)
+    }
 
-	private function sendSCCRP() {
-		$avps = array();
-		// Construct all needed AVPs:
-		$avp_mt = AVPFactory::createAVP(array('avp_type' => AvpType::MESSAGE_TYPE_AVP));
-		$avp_mt->setValue(MT_SCCRP);
-		$avps[] = $avp_mt;
+    private function generateSCCRP()
+    {
+        $this->logger->info("[TUNNEL] Start-Control-Connection-Reply");
+        $responsePacket = new CtrlPacket();
+        // Add message type:
+        $avp = AVPFactory::createAVP(AvpType::MESSAGE_TYPE_AVP);
+        $avp->setValue(MT_SCCRP);
+        $responsePacket->addAVP($avp);
+        // Add protocol version:
+        $avp = AVPFactory::createAVP(AvpType::PROTOCOL_VERSION_AVP);
+        $avp->setValue(array('version' => Protocol::VERSION, 'revision' => Protocol::REVISION));
+        $responsePacket->addAVP($avp);
+        // Add framing capabilities:
+        $avp = AVPFactory::createAVP(AvpType::FRAMING_CAPABILITIES_AVP);
+        $avp->setValue();
+        $responsePacket->addAVP($avp);
+        // Set host name:
+        $avp = AVPFactory::createAVP(AvpType::HOSTNAME_AVP);
+        $avp->setValue('lomakov.net');
+        $responsePacket->addAVP($avp);
+        // Add tunnel id:
+        $avp = AVPFactory::createAVP(AvpType::ASSIGNED_TUNNEL_ID_AVP);
+        $avp->setValue($this->internalId);
+        $responsePacket->addAVP($avp);
+        $avp = AVPFactory::createAVP(AvpType::BEARER_CAPABILITIES_AVP);
+        $avp->setValue(null);
+        $responsePacket->addAVP($avp);
+        $avp = AVPFactory::createAVP(AvpType::FIRMWARE_REVISION_AVP);
+        // TODO: set this to constant:
+        $avp->setValue(1);
+        $responsePacket->addAVP($avp);
+        $avp = AVPFactory::createAVP(AvpType::VENDOR_NAME_AVP);
+        $avp->setValue(null);
+        $responsePacket->addAVP($avp);
+        $avp = AVPFactory::createAVP(AvpType::RECEIVE_WINDOW_SIZE_AVP);
+        // TODO: put this value into constant
+        $avp->setValue(1024);
+        $responsePacket->addAVP($avp);
+        return $responsePacket;
+    }
 
-		$avp_pv = AVPFactory::createAVP(array('avp_type' => AvpType::PROTOCOL_VERSION_AVP));
-		$avp_pv->setValue(array('version' => 1, 'revision' => 0));
-		$avps[] = $avp_pv;
+    public function getId()
+    {
+        return $this->id;
+    }
 
-		$avp_fp = AVPFactory::createAVP(array('avp_type' => AvpType::FRAMING_CAPABILITIES_AVP));
-		$avp_fp->setValue(array( 'sync' => true, 'async' => false));
-		$avps[] = $avp_fp;
-
-		$avp_h = AVPFactory::createAVP(array('avp_type' => AvpType::HOSTNAME_AVP));
-		$avp_h->setValue(php_uname("n"));
-		$avps[] = $avp_h;
-
-		$avp_tid = AVPFactory::createAVP(array('avp_type' => AvpType::ASSIGNED_TUNNEL_ID_AVP));
-		$avp_tid->setValue($this->id);
-		$avps[] = $avp_tid;
-
-	}
+    private function generateZLB()
+    {
+        $this->logger->info("[TUNNEL] ZLB ACK");
+        $responsePacket = new CtrlPacket();
+        return $responsePacket;
+    }
 
 }

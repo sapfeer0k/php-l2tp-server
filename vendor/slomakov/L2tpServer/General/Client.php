@@ -20,6 +20,7 @@
 
 namespace L2tpServer\General;
 
+use L2tpServer\AVPs\AssignedTunnelIdAVP;
 use L2tpServer\AVPs\AVPFactory;
 use L2tpServer\AVPs\BaseAVP;
 use L2tpServer\Constants\AvpType;
@@ -67,123 +68,74 @@ class Client
         }
         $this->setTimeout();
         $this->packet = $packet;
-        if ($this->packet->packetType == Packet::TYPE_CONTROL) {
+        if ($this->packet->getType() == Packet::TYPE_CONTROL) {
+            /* @var $this->packet CtrlPacket */
             $this->logger->info("Receiving control packet");
             return $this->controlRequest();
-        } elseif ($this->packet->packetType == Packet::TYPE_DATA) {
+        } elseif ($this->packet->getType() == Packet::TYPE_DATA) {
             $this->logger->info("Receiving data packet");
             return $this->dataRequest();
+        }
+    }
+
+    private function logAVP(CtrlPacket $packet)
+    {
+        foreach ($packet->getAVPS() as $avp) {
+            $className = explode('\\', get_class($avp));
+            $this->logger->info(
+                array_pop($className) . ': ' . (is_array($avp->value) ? http_build_query(
+                    $avp->value
+                ) : $avp->value)
+            );
         }
     }
 
     private function controlRequest()
     {
         /* @var $this->packet CtrlPacket */
-        $this->logger->info("Receiving control packet: " . ($this->packet->Nr . ':' . $this->packet->Ns));
+        if ($this->packet->getAVP(AvpType::MESSAGE_TYPE_AVP)->value === NULL) {
+            var_dump("avp message type", $this->packet->getAVP(AvpType::MESSAGE_TYPE_AVP), $this->packet->getAVP(AvpType::MESSAGE_TYPE_AVP)->value);
+            die;
+        }
         $message_type = $this->packet->getAVP(AvpType::MESSAGE_TYPE_AVP)->value;
-        $this->receivedNumber = ($this->receivedNumber + 1) % 65536; // We'v got a new message
-        switch ($message_type) {
-            case MT_SCCRQ:
-                $this->logger->info("Start-Control-Connection-Request");
-                foreach ($this->packet->getAVPS() as $avp) {
-                    $className = explode('\\', get_class($avp));
-                    $this->logger->info(
-                        array_pop($className) . ': ' . (is_array($avp->value) ? http_build_query(
-                            $avp->value
-                        ) : $avp->value)
-                    );
-                }
-                // AVPs which must be present:
-                $this->tunnelIdAvp = $this->packet->getAVP(AvpType::ASSIGNED_TUNNEL_ID_AVP);
-                if (!$this->tunnelIdAvp instanceof BaseAVP) {
-                    throw new ClientException("Tunnel ID avp is not found");
-                }
-                // TODO: check, what's happen if tunnel exists?
-                $this->tunnels[$this->tunnelIdAvp->value] = new Tunnel($this->tunnelIdAvp->value); // Save new tunnel:
-                // let's fill other properties:
-                $this->hostname = $this->packet->getAVP(AvpType::HOSTNAME_AVP)->value;
-                $clientVersion = $this->packet->getAVP(AvpType::PROTOCOL_VERSION_AVP);
-                if (!$clientVersion instanceof BaseAVP) {
-                    throw new ClientException("Client protocol version does not specified");
-                }
-                $framingCapabilities = $this->packet->getAVP(AvpType::FRAMING_CAPABILITIES_AVP);
-                // TODO: Check framing capabilities & protocol version
-                // AVPs that may be present: Bearer Capabilities , Receive Window Size , Challenge,
-                // Tie Breaker, Firmware Revision , Vendor Name
-                /* build response: */
-                $responsePacket = $this->generateSCCRP();
-                break;
-            default:
-                var_dump($this->packet);
-                throw new \Exception("Unknown packet type");
-                // This is not control tunnel message, let it be handled by session:
-                $tunnel_id = $this->packet->tunnelId;
+        $this->logger->info("control packet info: nR: " . $this->packet->Nr . ', Ns:' . $this->packet->Ns . ' Type: ' . $message_type);
+        $this->incrementReceivedPacketsNumber();
+        $serverTunnelId = $this->packet->tunnelId;
+        if (empty($serverTunnelId) && $message_type == MT_SCCRQ) {
+            /* @var $tunnelIdAvp AssignedTunnelIdAVP */
+            $tunnelIdAvp = $this->packet->getAVP(AvpType::ASSIGNED_TUNNEL_ID_AVP);
+            $clientTunnelId = $tunnelIdAvp->value;
+            // TODO: check, what's happen if tunnel exists?
+            $serverTunnelId = count($this->tunnels) + 1;
+            $this->tunnels[$serverTunnelId] = new Tunnel($clientTunnelId, $serverTunnelId);
+            // let's fill other properties for client:
+            $this->hostname = $this->packet->getAVP(AvpType::HOSTNAME_AVP)->value;
+        } elseif(empty($serverTunnelId)) { // Message is not SCCRQ, but tunnel id is empty
+            throw new \Exception("Tunnel not specified for control message");
         }
-        $this->sentNumber = ($this->sentNumber + 1) % 65536; // We'v got a new message
-        foreach ($responsePacket->getAVPS() as $avp) {
-            $className = explode('\\', get_class($avp));
-            $this->logger->info(
-                array_pop($className) . ': ' . (is_array($avp->value) ? http_build_query($avp->value) : $avp->value)
-            );
+        // Handle packet:
+        if (isset($this->tunnels[$serverTunnelId])) {
+            /* @var $tunnel Tunnel */
+            $tunnel = $this->tunnels[$serverTunnelId];
+            // Hack for sessionID
+            $responsePacket = $tunnel->processRequest($this->packet);
+        } else {
+            var_dump($this->packet);
+            throw new TunnelException("Tunnel # {$serverTunnelId} is not found");
         }
-        $responsePacket->setTunnelId($this->packet->getAVP(AvpType::ASSIGNED_TUNNEL_ID_AVP)->value);
-        return $responsePacket;
-        /*
-                if (isset($this->tunnels[$tunnel_id])) {
-                    $this->tunnels[$tunnel_id]->processRequest($this->packet->avps);
-                    // TODO: Set L2tpServer packet header for the response packet
-                } else {
-                    throw new TunnelException("Tunnel # ${tunnel_id} is not found");
-                }
-        */
-    }
-
-    private function generateSCCRP()
-    {
-        $this->logger->info("Start-Control-Connection-Reply");
-        $responsePacket = new CtrlPacket();
+        // Set client-level data:
         $responsePacket->setNs($this->sentNumber);
         $responsePacket->setNr($this->receivedNumber);
-        // Add message type:
-        $avp = AVPFactory::createAVP(AvpType::MESSAGE_TYPE_AVP);
-        $avp->setValue(MT_SCCRP);
-        $responsePacket->addAVP($avp);
-        // Add protocol version:
-        $avp = AVPFactory::createAVP(AvpType::PROTOCOL_VERSION_AVP);
-        $avp->setValue(array('version' => Protocol::VERSION, 'revision' => Protocol::REVISION));
-        $responsePacket->addAVP($avp);
-        // Add framing capabilities:
-        $avp = AVPFactory::createAVP(AvpType::FRAMING_CAPABILITIES_AVP);
-        $avp->setValue();
-        $responsePacket->addAVP($avp);
-        // Set host name:
-        $avp = AVPFactory::createAVP(AvpType::HOSTNAME_AVP);
-        $avp->setValue('lomakov.net');
-        $responsePacket->addAVP($avp);
-        // Add host name:
-        $avp = AVPFactory::createAVP(AvpType::ASSIGNED_TUNNEL_ID_AVP);
-        $avp->setValue($this->tunnelIdAvp->value);
-        $responsePacket->addAVP($avp);
-        $avp = AVPFactory::createAVP(AvpType::BEARER_CAPABILITIES_AVP);
-        $avp->setValue(null);
-        $responsePacket->addAVP($avp);
-        $avp = AVPFactory::createAVP(AvpType::FIRMWARE_REVISION_AVP);
-        // TODO: set this to constant:
-        $avp->setValue(1);
-        $responsePacket->addAVP($avp);
-        $avp = AVPFactory::createAVP(AvpType::VENDOR_NAME_AVP);
-        $avp->setValue(NULL);
-        $responsePacket->addAVP($avp);
-        $avp = AVPFactory::createAVP(AvpType::RECEIVE_WINDOW_SIZE_AVP);
-        // TODO: put this value into constant
-        $avp->setValue(1024);
-        $responsePacket->addAVP($avp);
+        // Don't increment for ZLB ACK messages
+        if (count($responsePacket->getAVPS())) {
+            $this->incrementSentPacketsNumber();
+        }
         return $responsePacket;
     }
 
     private function dataRequest()
     {
-
+        return NULL;
     }
 
     public function getTimeout()
@@ -196,4 +148,13 @@ class Client
         $this->timeout = time() + self::TIMEOUT;
     }
 
+    protected function incrementSentPacketsNumber()
+    {
+        $this->sentNumber = ($this->sentNumber + 1) % 65536; // We'v got a new message
+    }
+
+    protected function incrementReceivedPacketsNumber()
+    {
+        $this->receivedNumber = ($this->packet->Ns + 1) % 65536; // We'v got a new message
+    }
 }

@@ -143,13 +143,14 @@ class CtrlPacket extends Packet {
      * @param $type
      * @return BaseAVP
      */
-    public function getAVP($type) {
+    public function getAVP($type)
+    {
         foreach($this->avps as $avp) {
             if ($avp->type == $type) {
                 return $avp;
             }
         }
-        return NULL;
+        throw new \Exception("AVP $type is not found");
     }
 
     protected function formatHeader($payloadSize)
