@@ -3,11 +3,11 @@
 namespace L2tpServer\General;
 
 
-class InfoPacket extends Packet {
+class DataPacket extends Packet {
 
 	protected $offset_size;
 
-	function __construct($rawPacket=false) {
+	public function __construct($rawPacket=false) {
 		if ($rawPacket) {
 			if (!$this->parse($rawPacket)) {
 				throw new Exception("Can't parse packet");
@@ -15,13 +15,13 @@ class InfoPacket extends Packet {
 		}
 	}
 
-	function parse($packet) {
-		trigger_error("Warning Method ".__METHOD__." in class ".__CLASS__." hasn't finished");
+	public function parse($packet) {
+		trigger_error("Method ".__METHOD__." in class ".__CLASS__." hasn't finished");
 		list( , $byte) = unpack('C',$packet[0]);
 		if ($byte & 128 == Packet::TYPE_DATA) {
 			$this->packetType = Packet::TYPE_DATA;
 		} else {
-			throw new Exception("You're trying to parse not a data packet");
+			throw new \Exception("You're trying to parse not a data packet($byte)");
 		}
 /*
 		list( , $byte) = unpack('C',$packet[0]);
@@ -91,29 +91,6 @@ class InfoPacket extends Packet {
 		return ;
 	}
 
-	function __get($name) {
-		if (method_exists($this, ($method = 'get'.ucfirst($name)))) {
-			return $this->$method;
-		} else {
-			if (property_exists($this, $name)) {
-				return $this->$name;
-			} else {
-				throw new Exception("You're trying to read property '$name' which doesn't exist");
-			}
-		}
-	}
-
-	function __set($name, $value) {
-		if (method_exists($this, ($method = 'set'.ucfirst($name)))) {
-			return $this->$method;
-		} else {
-			if (property_exists($this, $name)) {
-				$this->$name = $value;
-			} else {
-				throw new Exception("You're trying to change property '$name' which doesn't exist");
-			}
-		}
-	}
 }
 
 

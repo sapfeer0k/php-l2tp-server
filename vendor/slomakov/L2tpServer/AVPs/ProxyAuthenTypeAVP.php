@@ -5,21 +5,33 @@ namespace L2tpServer\AVPs;
 use L2tpServer\Exceptions\AVPException;
 use L2tpServer\Constants\AvpType;
 
-class AssignedSessionIdAVP extends BaseAVP
+class ProxyAuthenTypeAVP extends BaseAVP
 {
+    const RESERVED = 0;
+    const TEXTUAL_EXCHANGE = 1;
+    const PPP_CHAP = 2;
+    const PPP_PAP = 3;
+    const PPP_NO_AUTHENTICATION = 4;
+    const MSCHAPv1 = 5;
+
+    protected static $allowed = array (
+        self::RESERVED, self::TEXTUAL_EXCHANGE, self::PPP_CHAP,
+        self::PPP_PAP, self::PPP_NO_AUTHENTICATION, self::MSCHAPv1,
+    );
+
     public function __construct($isHidden=false)
     {
-        $this->is_mandatory = 1;
+        $this->is_mandatory = 0;
         $this->is_hidden = $isHidden;
-        $this->type = AvpType::ASSIGNED_SESSION_ID_AVP;
+        $this->type = AvpType::PROXY_AUTHEN_TYPE_AVP;
     }
 
     public static function import($data) 
     {
         $avp = new self();
 		list( , $avp_flags_len) = unpack('n', $data[0].$data[1]);
-		$avp->is_mandatory = ($avp_flags_len & 32768) ? true : false;
-		$avp->is_hidden = ($avp_flags_len & 16384) ? true : false;
+		$avp->is_mandatory = ($avp_flags_len & 32768) ? 1 : 0;
+		$avp->is_hidden = ($avp_flags_len & 16384) ? 1 : 0;
 		$avp->length = ($avp_flags_len & 1023);
 		if (!$avp->is_hidden && $avp->length != 8 ) {
 			throw new AVPException("Invalid length for Assigned Session ID AVP");
@@ -33,10 +45,8 @@ class AssignedSessionIdAVP extends BaseAVP
 
     public function setValue($value) 
     {
-		 if ($value > 0 && $value < 0xFFFF ) {
-			$this->value = $value;
-		 } else {
-			 throw new AVPException("Invalid value for Session ID");
+         if (!in_array($this->value, self::$allowed)) {
+			 throw new AVPException("Invalid value for Proxy Authen Type");
 		 }
 		 return true;
 	}
@@ -48,11 +58,11 @@ class AssignedSessionIdAVP extends BaseAVP
 
     public function validate() 
     {
-		if (!$this->is_mandatory) {
-			throw new SessionException("Assigned Session ID should be mandatory AVP");
+		if ($this->is_mandatory) {
+			throw new SessionException("Proxy Authen Type should not be mandatory AVP");
 		}
 		if ($this->value == 0 || $this->value >= 0xFFFF) {
-			throw new SessionException("Assigned Session ID should be greater than 0 and less than 0xFFFF");
+			throw new SessionException("Proxy Authen Type should be greater than 0 and less than 0xFFFF");
 		}
 	}
 }

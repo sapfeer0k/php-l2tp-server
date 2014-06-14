@@ -35,6 +35,11 @@ class Session {
                 $this->logger->info("New session established $serialNumber");
                 $responsePacket = $this->generateICRP();
                 break;
+            case MT_ICCN:
+                $this->logger->info("[SESSION] Incoming-Call-Connected");
+                var_dump($packet->getAVP(AvpType::PROXY_AUTHEN_TYPE_AVP)->value);
+                $responsePacket = $this->generateZLB();
+                break;
             default:
                 // ? Unknown state!
                 throw new \Exception("Unknown packet type");
@@ -57,4 +62,10 @@ class Session {
         return $responsePacket;
     }
 
+    private function generateZLB()
+    {
+        $this->logger->info("[TUNNEL] ZLB ACK");
+        $responsePacket = new CtrlPacket();
+        return $responsePacket;
+    }
 }

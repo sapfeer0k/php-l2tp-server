@@ -67,10 +67,17 @@ class AVPFactory
             case AvpType::RESULT_CODE_AVP:
                 $avp = new ResultCodeAVP();
                 break;
+            case AvpType::FRAMING_TYPE_AVP:
+                $avp = new FramingTypeAVP();
+                break;
+            case AvpType::TX_CONNECT_SPEED_BPS_AVP:
+                $avp = new TxConnectSpeedBpsAVP();
+                break;
+            case AvpType::PROXY_AUTHEN_TYPE_AVP:
+                $avp = new ProxyAuthenTypeAVP();
+                break;
             default:
-                // default AVPs
                 throw new \Exception("Unknown AVP with type: " . $avpType);
-                //$avp = UnrecognizedAVP::import($avpRawData);
         }
         return $avp;
     }

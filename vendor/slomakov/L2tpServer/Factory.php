@@ -20,7 +20,7 @@
 namespace L2tpServer;
 
 use L2tpServer\General\CtrlPacket,
-    L2tpServer\General\InfoPacket,
+    L2tpServer\General\DataPacket,
     L2tpServer\General\Packet;
 
 class Factory {
@@ -30,7 +30,7 @@ class Factory {
         if ($byte & Packet::TYPE_CONTROL) {
 			$packet = new CtrlPacket($raw_data);
 		} else {
-			$packet = new InfoPacket($raw_data);
+			$packet = new DataPacket($raw_data);
 		}
 		return $packet;
 	}
