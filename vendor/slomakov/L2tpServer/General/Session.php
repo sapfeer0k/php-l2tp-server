@@ -12,6 +12,8 @@ class Session {
     protected $id;
     protected $internalId;
     protected $logger;
+    protected $process;
+    protected $pipes;
 
     public function __construct($sessionId, $internalId)
     {
@@ -21,13 +23,16 @@ class Session {
     }
 
     /**
-     * @param CtrlPacket $packet
-     * @return CtrlPacket|null
+     * @param Packet $packet
+     * @return Packet|null
      * @throws \Exception
      */
-    public function processRequest(CtrlPacket $packet)
+    public function processRequest(Packet $packet)
     {
-        $messageType = $packet->getAvp(AvpType::MESSAGE_TYPE_AVP)->value;
+        $messageType = NULL;
+        if ($packet instanceof CtrlPacket) {
+            $messageType = $packet->getAvp(AvpType::MESSAGE_TYPE_AVP)->value;
+        }
         switch ($messageType) {
             case MT_ICRQ:
                 $this->logger->info("[SESSION] Incoming-Call-Request");
@@ -37,12 +42,20 @@ class Session {
                 break;
             case MT_ICCN:
                 $this->logger->info("[SESSION] Incoming-Call-Connected");
-                var_dump($packet->getAVP(AvpType::PROXY_AUTHEN_TYPE_AVP)->value);
+                $this->startPPP();
                 $responsePacket = $this->generateZLB();
+                break;
+            case NULL:
+                $this->logger->info("[SESSION] Data packet");
+                /* @var $packet DataPacket */
+                fwrite($this->pipes[1], $packet->payload);
+                $string  = fread($this->pipes[1], 0xFFFF);
+                var_dump($string);
+                die;
                 break;
             default:
                 // ? Unknown state!
-                throw new \Exception("Unknown packet type");
+                throw new \Exception("Unknown message type $messageType");
         }
         $responsePacket->setSessionId($this->id);
         return $responsePacket;
@@ -53,13 +66,34 @@ class Session {
         $this->logger->info("[SESSION] Incoming-Call-Reply");
         $responsePacket = new CtrlPacket();
         // Add message type:
-        $avp = AVPFactory::createAVP(AvpType::MESSAGE_TYPE_AVP);
+        $avp = AVPFactory::create(AvpType::MESSAGE_TYPE_AVP);
         $avp->setValue(MT_ICRP);
         $responsePacket->addAVP($avp);
-        $avp = AVPFactory::createAVP(AvpType::ASSIGNED_SESSION_ID_AVP);
+        $avp = AVPFactory::create(AvpType::ASSIGNED_SESSION_ID_AVP);
         $avp->setValue($this->internalId);
         $responsePacket->addAVP($avp);
         return $responsePacket;
+    }
+
+    protected function startPPP()
+    {
+        $descriptorspec = array(
+            0 => array("pipe", "r"),  // stdin - канал, из которого дочерний процесс будет читать
+            1 => array("pipe", "w"),  // stdout - канал, в который дочерний процесс будет записывать
+            2 => array("file", "/tmp/error-output.txt", "a") // stderr - файл для записи
+        );
+        $cwd = '/tmp';
+        $this->process = proc_open('/usr/sbin/pppd passive noauth nodetach debug notty', $descriptorspec, $this->pipes, $cwd);
+        //sleep(1);
+        if (!is_resource($this->process)) {
+            // all bad!
+            die('Cannot start pppd');
+        } else {
+            while (!feof($this->pipes[1])) {
+                $string  = fread($this->pipes[1], 0xFFFF);
+                var_dump($string);
+            }
+        }
     }
 
     private function generateZLB()

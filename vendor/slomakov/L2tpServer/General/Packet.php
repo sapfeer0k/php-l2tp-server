@@ -21,6 +21,7 @@ abstract class Packet {
 	protected $Ns;
 	protected $Nr;
 	protected $error;
+    protected $offset;
 
 	public function __construct($rawPacket=false) {
 		if ($rawPacket) {
@@ -77,20 +78,20 @@ abstract class Packet {
             $this->packetType = Packet::TYPE_DATA;
         }
         $this->isLengthPresent = ($byte & 64) ? 1 : 0;
-        if (!$this->isLengthPresent) {
+        if ($this->isControl() && !$this->isLengthPresent) {
             throw new \Exception("Length field should be present for Control messages");
         }
         // bits 3,4 are ignored
         $this->isSequencePresent = ($byte & 8) ? 1 : 0;
-        if (!$this->isSequencePresent) {
+        if ($this->isControl() && !$this->isSequencePresent) {
             throw new \Exception("Sequence fields should be present for Control messages");
         }
         $this->isOffsetPresent = ($byte & 2) ? 1 : 0;
-        if ($this->isOffsetPresent) {
+        if ($this->isControl() && $this->isOffsetPresent) {
             throw new \Exception("Offset Size field should be 0 for Control messages");
         }
         $this->isPrioritized = ($byte & 1) ? 1 : 0;
-        if ($this->isPrioritized && $this->packetType == Packet::TYPE_CONTROL) {
+        if ($this->isPrioritized && $this->isControl()) {
             throw new \Exception("Priority field should be 0 for Control messages");
         }
         unset($byte); // little cleanup
@@ -108,6 +109,14 @@ abstract class Packet {
             list( , $this->Ns) = unpack('n', $packet[8].$packet[9]);
             list( , $this->Nr) = unpack('n', $packet[10].$packet[11]);
         }
+        if ($this->isData() && $this->isOffsetPresent) {
+            $this->offset = unpack('n', $packet[12].$packet[13]);
+        }
+    }
+
+    public function getHeaderLength()
+    {
+        return 8 + ($this->isSequencePresent ? 4 : 0) + ($this->isOffsetPresent ? 2 + $this->offset : 0);
     }
 
     /**
@@ -142,6 +151,15 @@ abstract class Packet {
         return $header;
     }
 
+    public function isControl()
+    {
+        return $this->getType() == self::TYPE_CONTROL;
+    }
+
+    public function isData()
+    {
+        return $this->getType() == self::TYPE_DATA;
+    }
 }
 
 

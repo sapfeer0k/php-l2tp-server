@@ -10,6 +10,7 @@ namespace L2tpServer\General;
 
 use L2tpServer\AVPs\AssignedTunnelIdAVP;
 use L2tpServer\Constants\AvpType;
+use L2tpServer\Exceptions\ClientException;
 use L2tpServer\Exceptions\ServerException,
     L2tpServer\Factory,
     Packfire\Logger\File as Logger;
@@ -62,13 +63,20 @@ class Server {
                 $packet = Factory::createPacket($buf);
                 /* @var $this->clients[] Client */
                 /* @var $response CtrlPacket */
-				$response = $this->clients[$client_hash]->processRequest($packet);
-                //file_put_contents('test_response_0.dat', $response->encode());
-                //die;
-                $rawData = $response->encode();
-                $this->logger->info("Send response to: $ip:$port, with " . strlen($rawData) . ' bytes');
-                socket_sendto($this->socket, $rawData, strlen($rawData), 0, $ip, $port);
-			} else {
+                try {
+                    $response = $this->clients[$client_hash]->processRequest($packet);
+                    if (!$response) {
+                        continue;
+                    }
+                    $rawData = $response->encode();
+                    $this->logger->info("Send response to: $ip:$port, with " . strlen($rawData) . ' bytes');
+                    socket_sendto($this->socket, $rawData, strlen($rawData), 0, $ip, $port);
+                } catch (ClientException $e) {
+                    $this->logger->error($client_hash . ' error: ' . $e->getMessage());
+                    $this->logger->error('Drop packet from ' . $client_hash);
+                    unset($this->clients[$client_hash]);
+                }
+            } else {
                 usleep(50000);
             }
             foreach($this->clients as $id => $client) {

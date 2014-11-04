@@ -2,7 +2,7 @@
 
 namespace L2tpServer\Exceptions;
 
-class TunnelException extends \Exception {
+class SessionException extends \Exception {
 
 }
 

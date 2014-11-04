@@ -4,6 +4,7 @@ namespace L2tpServer\AVPs;
 
 use L2tpServer\Exceptions\AVPException;
 use L2tpServer\Constants\AvpType;
+use L2tpServer\Exceptions\SessionException;
 
 class TxConnectSpeedBpsAVP extends BaseAVP
 {
@@ -27,6 +28,8 @@ class TxConnectSpeedBpsAVP extends BaseAVP
 		list( , $avp->vendor_id) = unpack('n', $data[2].$data[3]);
 		list( , $avp->type) = unpack('n', $data[4].$data[5]);
 		list( , $avp->value) = unpack('L', $data[6].$data[7].$data[8].$data[9]);
+        // Unpack L doesn't worked, bug, see docs
+        $avp->value = sprintf('%u', $avp->value);
 		$avp->validate();
         return $avp;
 	}
@@ -52,7 +55,7 @@ class TxConnectSpeedBpsAVP extends BaseAVP
 			throw new SessionException("(Tx) Connect Speed BPS should be mandatory AVP");
 		}
 		if ($this->value < 0 || $this->value >= 0xFFFFFFFF) {
-			throw new SessionException("(Tx) Connect Speed BPS should be greater than 0 and less than 0xFFFF");
+            throw new SessionException("(Tx) Connect Speed BPS should be greater than 0 and less than 0x0xFFFFFFFF, got: {$this->value}");
 		}
 	}
 }

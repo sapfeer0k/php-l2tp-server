@@ -1,4 +1,4 @@
-#!/usr/bin/env php
+#!/usr/bin/php
 <?php
 /****
 * This file is part of php-L2tpServer-server.

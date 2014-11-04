@@ -13,7 +13,7 @@ use L2tpServer\Constants\AvpType;
 class AVPFactory
 {
 
-    public static function createAVP($params)
+    public static function create($params)
     {
         if (isset($params['avp_raw_data'])) {
             return self::import($params['avp_raw_data']);
@@ -65,16 +65,16 @@ class AVPFactory
                 $avp = BearerTypeAVP::import($avpRawData);
                 break;
             case AvpType::RESULT_CODE_AVP:
-                $avp = new ResultCodeAVP();
+                $avp = ResultCodeAVP::import($avpRawData);
                 break;
             case AvpType::FRAMING_TYPE_AVP:
-                $avp = new FramingTypeAVP();
+                $avp = FramingTypeAVP::import($avpRawData);
                 break;
             case AvpType::TX_CONNECT_SPEED_BPS_AVP:
-                $avp = new TxConnectSpeedBpsAVP();
+                $avp = TxConnectSpeedBpsAVP::import($avpRawData);
                 break;
             case AvpType::PROXY_AUTHEN_TYPE_AVP:
-                $avp = new ProxyAuthenTypeAVP();
+                $avp = ProxyAuthenTypeAVP::import($avpRawData);
                 break;
             default:
                 throw new \Exception("Unknown AVP with type: " . $avpType);

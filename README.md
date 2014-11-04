@@ -7,6 +7,8 @@ The code is published under the GPLv3. Feel free to use it.
 Ongoing actions:
 ---
 
+- Implement PPP frames forwarding
+- Implement packet loss detection
 - Write unit test for Host name AVP
 - Write unit test for Unrecognized AVP
 - Write unit test for Framing Capabilties AVP
@@ -19,6 +21,7 @@ Ongoing actions:
 - Write unit test for Tie Breaker AVP
 - Implement Challenge Response AVP
 - Write unit test for Challenge Response AVP
-- Implement Start-Control-Connection-Connected packet
-- Implement ZLB ACK handling
+
+
+
 

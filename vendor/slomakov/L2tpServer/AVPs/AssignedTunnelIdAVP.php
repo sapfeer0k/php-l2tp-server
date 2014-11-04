@@ -4,6 +4,7 @@ namespace L2tpServer\AVPs;
 
 use L2tpServer\Exceptions\AVPException;
 use L2tpServer\Constants\AvpType;
+use L2tpServer\Exceptions\TunnelException;
 
 class AssignedTunnelIdAVP extends BaseAVP 
 {

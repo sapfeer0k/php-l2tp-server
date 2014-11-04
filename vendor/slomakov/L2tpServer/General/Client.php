@@ -26,6 +26,7 @@ use L2tpServer\AVPs\BaseAVP;
 use L2tpServer\Constants\AvpType;
 use L2tpServer\Constants\Protocol;
 use L2tpServer\Exceptions\ClientException;
+use L2tpServer\Exceptions\TunnelException;
 use Packfire\Logger\File as Logger;
 
 class Client
@@ -93,9 +94,9 @@ class Client
     private function controlRequest()
     {
         /* @var $this->packet CtrlPacket */
-        if ($this->packet->getAVP(AvpType::MESSAGE_TYPE_AVP)->value === NULL) {
-            var_dump("avp message type", $this->packet->getAVP(AvpType::MESSAGE_TYPE_AVP), $this->packet->getAVP(AvpType::MESSAGE_TYPE_AVP)->value);
-            die;
+        if ($this->packet->getAVP(AvpType::MESSAGE_TYPE_AVP) === NULL) {
+            // ZLB-packet
+            return new CtrlPacket();
         }
         $message_type = $this->packet->getAVP(AvpType::MESSAGE_TYPE_AVP)->value;
         $this->logger->info("control packet info: nR: " . $this->packet->Nr . ', Ns:' . $this->packet->Ns . ' Type: ' . $message_type);
@@ -117,25 +118,45 @@ class Client
         if (isset($this->tunnels[$serverTunnelId])) {
             /* @var $tunnel Tunnel */
             $tunnel = $this->tunnels[$serverTunnelId];
-            // Hack for sessionID
-            $responsePacket = $tunnel->processRequest($this->packet);
+            if ($message_type == MT_StopCCN) {
+                $this->logger->info("Stop-Control-Connection-Notification");
+                $error = $this->packet->getAVP(AvpType::RESULT_CODE_AVP)->value;
+                var_dump($error, $this->packet->getAVPS());
+                $this->logger->info("Result code: $error[resultCode]");
+                if (isset($error['errorCode'])) {
+                    $this->logger->info("Error code: $error[errorCode]");
+                }
+                if (isset($error['errorMessage'])) {
+                    $this->logger->info("Error message: $error[errorMessage]");
+                }
+                unset($this->tunnels[$serverTunnelId]);
+                $this->logger->info("Closing tunnel $serverTunnelId");
+                return new CtrlPacket();
+            } else {
+                $responsePacket = $tunnel->processRequest($this->packet);
+            }
         } else {
-            var_dump($this->packet);
-            throw new TunnelException("Tunnel # {$serverTunnelId} is not found");
+            throw new ClientException("Tunnel # {$serverTunnelId} is not found");
         }
-        // Set client-level data:
-        $responsePacket->setNs($this->sentNumber);
-        $responsePacket->setNr($this->receivedNumber);
-        // Don't increment for ZLB ACK messages
-        if (count($responsePacket->getAVPS())) {
-            $this->incrementSentPacketsNumber();
+        /* @var $responsePacket CtrlPacket */
+        if ($responsePacket instanceof CtrlPacket) {
+            // Set client-level data:
+            $responsePacket->setNs($this->sentNumber);
+            $responsePacket->setNr($this->receivedNumber);
+            // Don't increment for ZLB ACK messages
+            if (count($responsePacket->getAVPS())) {
+                $this->incrementSentPacketsNumber();
+            }
         }
         return $responsePacket;
     }
 
     private function dataRequest()
     {
-        return NULL;
+        $serverTunnelId = $this->packet->tunnelId;
+        /* @var Tunnel $tunnel */
+        $tunnel = $this->tunnels[$serverTunnelId];
+        return $tunnel->processRequest($this->packet);
     }
 
     public function getTimeout()

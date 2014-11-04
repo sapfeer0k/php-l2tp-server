@@ -82,7 +82,7 @@ class CtrlPacket extends Packet {
             $avp_len = $avp_bytes & 1023;
             $avp_raw_data = substr($payload, 0, $avp_len);
             try {
-                $this->avps[] = AVPFactory::createAVP(array('avp_raw_data' => $avp_raw_data));
+                $this->avps[] = AVPFactory::create(array('avp_raw_data' => $avp_raw_data));
             } catch (IgnoreAVPException $e) {
                 trigger_error($e->getMessage());
             }
@@ -150,7 +150,7 @@ class CtrlPacket extends Packet {
                 return $avp;
             }
         }
-        throw new \Exception("AVP $type is not found");
+        return NULL;
     }
 
     public function getAVPS()
