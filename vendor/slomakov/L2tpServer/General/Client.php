@@ -26,13 +26,14 @@ use L2tpServer\AVPs\BaseAVP;
 use L2tpServer\Constants\AvpType;
 use L2tpServer\Constants\Protocol;
 use L2tpServer\Exceptions\ClientException;
+use L2tpServer\Exceptions\CloseConnectionException;
 use L2tpServer\Exceptions\TunnelException;
 use Packfire\Logger\File as Logger;
 
 class Client
 {
 
-    const TIMEOUT = 31;
+    const TIMEOUT = 310;
     protected $logger;
     protected $receivedNumber = 0;
     protected $sentNumber = 0;
@@ -121,17 +122,18 @@ class Client
             if ($message_type == MT_StopCCN) {
                 $this->logger->info("Stop-Control-Connection-Notification");
                 $error = $this->packet->getAVP(AvpType::RESULT_CODE_AVP)->value;
-                var_dump($error, $this->packet->getAVPS());
-                $this->logger->info("Result code: $error[resultCode]");
+                $message = ("Result code: $error[resultCode]");
                 if (isset($error['errorCode'])) {
-                    $this->logger->info("Error code: $error[errorCode]");
+                    $message.= ", Error code: $error[errorCode]";
                 }
                 if (isset($error['errorMessage'])) {
-                    $this->logger->info("Error message: $error[errorMessage]");
+                    $message .= ", Error message: $error[errorMessage]";
                 }
+                $this->logger->info($message);
                 unset($this->tunnels[$serverTunnelId]);
                 $this->logger->info("Closing tunnel $serverTunnelId");
-                return new CtrlPacket();
+                throw new CloseConnectionException();
+//                return new CtrlPacket();
             } else {
                 $responsePacket = $tunnel->processRequest($this->packet);
             }
@@ -155,6 +157,10 @@ class Client
     {
         $serverTunnelId = $this->packet->tunnelId;
         /* @var Tunnel $tunnel */
+        if (!isset($this->tunnels[$serverTunnelId])) {
+            $this->logger->error("I've got packet for unknown tunnel $serverTunnelId, content: " . var_export($this->packet, true));
+            return null;
+        }
         $tunnel = $this->tunnels[$serverTunnelId];
         return $tunnel->processRequest($this->packet);
     }

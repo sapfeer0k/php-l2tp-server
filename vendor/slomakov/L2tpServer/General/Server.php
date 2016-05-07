@@ -11,6 +11,7 @@ namespace L2tpServer\General;
 use L2tpServer\AVPs\AssignedTunnelIdAVP;
 use L2tpServer\Constants\AvpType;
 use L2tpServer\Exceptions\ClientException;
+use L2tpServer\Exceptions\CloseConnectionException;
 use L2tpServer\Exceptions\ServerException,
     L2tpServer\Factory,
     Packfire\Logger\File as Logger;
@@ -50,10 +51,10 @@ class Server {
 			$buf = NULL;
 			$ip = NULL;
 			$port = NULL;
-            $len = socket_recvfrom($this->socket, $buf, 65535, 0, $ip, $port);
+            $len = socket_recvfrom($this->socket, $buf, 65535, MSG_DONTWAIT, $ip, $port);
 			if ($len > 0) {
 				//$client_hash = md5($ip .':'. $port);
-				$client_hash = md5($ip);
+				$client_hash = md5($ip); // xl2tp sents PINGs from different ports
 				// Is it new client ?
 				if (!isset($this->clients[$client_hash]) || !is_object($this->clients[$client_hash])) {
                     $this->logger->info("New connection: $ip:$port");
@@ -69,9 +70,11 @@ class Server {
                         continue;
                     }
                     $rawData = $response->encode();
-                    $this->logger->info("size: " . strlen($rawData));
                     $this->logger->info("Send response to: $ip:$port, with " . strlen($rawData) . ' bytes');
                     socket_sendto($this->socket, $rawData, strlen($rawData), 0, $ip, $port);
+                } catch (CloseConnectionException $e) {
+                    $this->logger->info("Closing connection for client: $ip:$port");
+                    unset($this->clients[$client_hash]);
                 } catch (ClientException $e) {
                     $this->logger->error($client_hash . ' error: ' . $e->getMessage());
                     $this->logger->error('Drop packet from ' . $client_hash);
