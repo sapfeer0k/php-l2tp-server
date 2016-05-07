@@ -34,7 +34,6 @@ class Server {
 		{
 			throw new ServerException("Can't create socket.");
 		}
-
 		return ;
 	}
 
@@ -53,7 +52,8 @@ class Server {
 			$port = NULL;
             $len = socket_recvfrom($this->socket, $buf, 65535, 0, $ip, $port);
 			if ($len > 0) {
-				$client_hash = md5($ip .':'. $port);
+				//$client_hash = md5($ip .':'. $port);
+				$client_hash = md5($ip);
 				// Is it new client ?
 				if (!isset($this->clients[$client_hash]) || !is_object($this->clients[$client_hash])) {
                     $this->logger->info("New connection: $ip:$port");
@@ -69,6 +69,7 @@ class Server {
                         continue;
                     }
                     $rawData = $response->encode();
+                    $this->logger->info("size: " . strlen($rawData));
                     $this->logger->info("Send response to: $ip:$port, with " . strlen($rawData) . ' bytes');
                     socket_sendto($this->socket, $rawData, strlen($rawData), 0, $ip, $port);
                 } catch (ClientException $e) {

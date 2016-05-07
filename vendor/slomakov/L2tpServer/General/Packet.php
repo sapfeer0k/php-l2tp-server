@@ -100,23 +100,24 @@ abstract class Packet {
         if ($this->protoVersion != 2) {
             throw new \Exception("Unsupported protocol version {$this->protoVersion}");
         }
+        $offset = 1;
         if ($this->isLengthPresent) { // actually it is always must be present, but double check :-)
-            list( , $this->length) = unpack('n', $packet[2].$packet[3]);
+            list( , $this->length) = unpack('n', $packet[++$offset].$packet[++$offset]);
         }
-        list( , $this->tunnelId) = unpack('n', $packet[4].$packet[5]);
-        list( , $this->sessionId) = unpack('n', $packet[6].$packet[7]);
+        list( , $this->tunnelId) = unpack('n', $packet[++$offset].$packet[++$offset]);
+        list( , $this->sessionId) = unpack('n', $packet[++$offset].$packet[++$offset]);
         if ($this->isSequencePresent) { // actually it is always must be present, but double check :-)
-            list( , $this->Ns) = unpack('n', $packet[8].$packet[9]);
-            list( , $this->Nr) = unpack('n', $packet[10].$packet[11]);
+            list( , $this->Ns) = unpack('n', $packet[++$offset].$packet[++$offset]);
+            list( , $this->Nr) = unpack('n', $packet[++$offset].$packet[++$offset]);
         }
         if ($this->isData() && $this->isOffsetPresent) {
-            $this->offset = unpack('n', $packet[12].$packet[13]);
+            $this->offset = unpack('n', $packet[++$offset].$packet[++$offset]);
         }
     }
 
     public function getHeaderLength()
     {
-        return 8 + ($this->isSequencePresent ? 4 : 0) + ($this->isOffsetPresent ? 2 + $this->offset : 0);
+        return 6 + ($this->isLengthPresent ? 2 : 0) + ($this->isSequencePresent ? 4 : 0) + ($this->isOffsetPresent ? 2 + $this->offset : 0);
     }
 
     /**
@@ -145,7 +146,7 @@ abstract class Packet {
             $header .= pack('n', (int)$this->Nr);
         }
         // Setting final length:
-        $length = pack('n', $payloadSize + mb_strlen($header));
+        $length = pack('n', $payloadSize + strlen($header));
         $header[2] = $length[0];
         $header[3] = $length[1];
         return $header;

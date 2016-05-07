@@ -65,7 +65,7 @@ abstract class BaseAVP
         }
 
         $payload = pack('nn', $this->vendor_id, $this->type) .  $this->getEncodedValue();
-        $this->length = 2 + mb_strlen($payload); // first two bytes + all other data
+        $this->length = 2 + strlen($payload); // first two bytes + all other data
         $flags += $this->length;
         return pack("n", $flags) . $payload;
     }

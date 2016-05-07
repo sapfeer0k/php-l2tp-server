@@ -49,7 +49,7 @@ class AvpType {
 	const ACCM_AVP = 35;
 	const RANDOM_VECTOR_AVP = 36;
 	const PRIVATE_GROUP_ID_AVP = 37;
-	const RX_CONNECTION_SPEED_BPS_AVP = 38;
+	const RX_CONNECT_SPEED_AVP = 38;
 	const SEQUENCE_REQUIRED_AVP = 39;
 
 	static function exists($type) {

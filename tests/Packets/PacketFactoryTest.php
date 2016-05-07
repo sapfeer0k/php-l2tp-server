@@ -37,7 +37,7 @@ class PacketFactoryTest extends PHPUnit_Framework_TestCase
         $packet = Factory::createPacket($rawData);
         $this->assertTrue($packet instanceof Packet, "Type mismatch. Factory should return Packet instance");
         $this->assertTrue($packet instanceof CtrlPacket, "Type mismatch. Factory should return CtrlPacket instance");
-        $this->assertEquals($packet->length, mb_strlen($rawData), "Packet lentgth mismatch error");
+        $this->assertEquals($packet->length, strlen($rawData), "Packet lentgth mismatch error");
         //$this->markTestIncomplete("Please, add more check here!");
         return $packet;
     }
@@ -49,7 +49,7 @@ class PacketFactoryTest extends PHPUnit_Framework_TestCase
     {
         //$this->markTestIncomplete("Please, add more checks here!");
         $rawCustomData = $packet->encode();
-        $this->assertEquals(mb_strlen(file_get_contents(dirname(__FILE__) . '/1.raw')), mb_strlen($rawCustomData), "Packets length mismatching");
+        $this->assertEquals(strlen(file_get_contents(dirname(__FILE__) . '/1.raw')), strlen($rawCustomData), "Packets length mismatching");
         $new_packet = Factory::createPacket($rawCustomData);
         $this->assertEquals($packet, $new_packet, "Packets mistmaching!");
     }

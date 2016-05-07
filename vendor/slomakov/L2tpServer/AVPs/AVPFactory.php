@@ -70,6 +70,9 @@ class AVPFactory
             case AvpType::FRAMING_TYPE_AVP:
                 $avp = FramingTypeAVP::import($avpRawData);
                 break;
+            case AvpType::RX_CONNECT_SPEED_AVP:
+                $avp = RxConnectSpeedAVP::import($avpRawData);
+                break;
             case AvpType::TX_CONNECT_SPEED_BPS_AVP:
                 $avp = TxConnectSpeedBpsAVP::import($avpRawData);
                 break;

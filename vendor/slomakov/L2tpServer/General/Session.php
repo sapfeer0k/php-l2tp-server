@@ -37,21 +37,22 @@ class Session {
             case MT_ICRQ:
                 $this->logger->info("[SESSION] Incoming-Call-Request");
                 $serialNumber = $packet->getAVP(AvpType::CALL_SERIAL_NUMBER_AVP)->value;
-                $this->logger->info("New session established $serialNumber");
+                $this->logger->info("New session established with serial: $serialNumber");
                 $responsePacket = $this->generateICRP();
                 break;
             case MT_ICCN:
                 $this->logger->info("[SESSION] Incoming-Call-Connected");
-                $this->startPPP();
+                //$this->startPPP();
                 $responsePacket = $this->generateZLB();
                 break;
             case NULL:
                 $this->logger->info("[SESSION] Data packet");
                 /* @var $packet DataPacket */
-                fwrite($this->pipes[1], $packet->payload);
-                $string  = fread($this->pipes[1], 0xFFFF);
-                var_dump($string);
-                die;
+                //fwrite($this->pipes[1], $packet->payload);
+                //$string  = fread($this->pipes[1], 0xFFFF);
+                //var_dump($string);
+                //die;
+                return null;
                 break;
             default:
                 // ? Unknown state!

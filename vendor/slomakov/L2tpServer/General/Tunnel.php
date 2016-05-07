@@ -57,7 +57,6 @@ class Tunnel
         if ($packet instanceof CtrlPacket) {
             $messageType = $packet->getAvp(AvpType::MESSAGE_TYPE_AVP)->value;
         }
-        $sessionId = $packet->sessionId;
         switch ($messageType) {
             case MT_SCCRQ: // We've got a request, let's answer then? :-)
                 $this->logger->info("[TUNNEL] Start-Control-Connection-Request");
@@ -69,32 +68,44 @@ class Tunnel
                 break;
             case MT_CDN:
                 $this->logger->info("[TUNNEL] Call-Disconnect-Notify");
-                unset($this->sessions[$sessionId]);
-                $this->logger->info("[TUNNEL] Destroying session $sessionId");
-                $result = $packet->getAVP(AvpType::RESULT_CODE_AVP)->value;
-                $this->logger->info("Result code: $result[resultCode]");
-                $this->logger->info("Error code: $result[errorCode]");
+                foreach($this->sessions as $sessionId) {
+                    unset($this->sessions[$sessionId]);
+                    $this->logger->info("[TUNNEL] Destroying session $sessionId");
+                    $result = $packet->getAVP(AvpType::RESULT_CODE_AVP)->value;
+                    $this->logger->info("Result code: $result[resultCode]");
+                    $this->logger->info("Error code: $result[errorCode]");
+                }
                 return NULL; // Must not return anything on CDN
                 break;
             case MT_HELLO:
                 $this->logger->info("[TUNNEL] HELLO");
                 $responsePacket = $this->generateZLB();
                 break;
+            case MT_ICRQ: // Request for a new session
+                $serverSessionId = count($this->sessions) + 1;
+                $sessionId = $packet->getAVP(AvpType::ASSIGNED_SESSION_ID_AVP)->value;
+                $this->logger->info("[TUNNEL] Incoming-Call-Request. Create new client session: $sessionId, internal: $serverSessionId");
+                $this->sessions[$serverSessionId] = new Session($sessionId, $serverSessionId);
+                $responsePacket = $this->sessions[$serverSessionId]->processRequest($packet);
+                break;
             default:
-                if ($messageType == MT_ICRQ) {
-                    $serverSessionId = count($this->sessions) + 1;
-                    $sessionId = $packet->getAVP(AvpType::ASSIGNED_SESSION_ID_AVP)->value;
-                    $this->sessions[$serverSessionId] = new Session($sessionId, $serverSessionId);
-                }
+                $sessionId = $packet->sessionId;
+                $this->logger->info("[TUNNEL] Packet for Session: $sessionId");
                 if (!$sessionId) {
                     var_dump($messageType);
+                    throw new \Exception("Session not defined");
+                }
+                if (!isset($this->sessions[$sessionId])) {
+                    $this->logger->info("[TUNNEL] Bad packet: " . var_export($packet, true));
                     throw new \Exception("Session not defined");
                 }
                 /* @var Session $session */
                 $session = $this->sessions[$sessionId];
                 $responsePacket = $session->processRequest($packet);
         }
-        $responsePacket->setTunnelId($this->getId());
+        if ($responsePacket) {
+            $responsePacket->setTunnelId($this->getId());
+        }
         return $responsePacket; // what do ween to return ? packet, Cap ;)
     }
 

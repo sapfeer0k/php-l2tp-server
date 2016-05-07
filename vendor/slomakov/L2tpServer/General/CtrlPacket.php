@@ -30,6 +30,7 @@ use L2tpServer\AVPs\AVPFactory,
     L2tpServer\Exceptions\TunnelException,
     L2tpServer\Exceptions\IgnoreAVPException,
     L2tpServer\AVPs\BaseAVP;
+use Packfire\Logger\File as Logger;
 
 class CtrlPacket extends Packet {
 
@@ -38,7 +39,8 @@ class CtrlPacket extends Packet {
 
 	protected $avps = array();
 
-	public function __construct($rawPacket=false) {
+    public function __construct($rawPacket=false) {
+        $this->logger = new Logger('server.log');
 		if ($rawPacket) {
 			if (!$this->parse($rawPacket)) {
 				throw new \Exception("Can't parse packet");
@@ -67,7 +69,7 @@ class CtrlPacket extends Packet {
         $this->parseHeader($packet);
 		// Further we'll work with $packet_data property:
 		$payload = substr($packet, 12);
-        if (mb_strlen($payload)) {
+        if (strlen($payload)) {
             $this->parseAVPs($payload);
         }
 		return true;
@@ -103,8 +105,8 @@ class CtrlPacket extends Packet {
             /* @var $avp BaseAVP */
             $packetData .= $avp->encode();
         }
-        $header = $this->formatHeader(mb_strlen($packetData)); // encode header
-        $this->length = mb_strlen($header . $packetData);
+        $header = $this->formatHeader(strlen($packetData)); // encode header
+        $this->length = strlen($header . $packetData);
 		return $header . $packetData;
 	}
 
