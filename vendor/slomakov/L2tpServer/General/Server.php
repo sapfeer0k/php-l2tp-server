@@ -47,10 +47,9 @@ class Server {
         }
         $this->logger->info("Starting listen on the {$this->addr}:{$this->port}");
         $i=1;
+        $ppp = new Ppp();
 		while(1) {
-			$buf = NULL;
-			$ip = NULL;
-			$port = NULL;
+			$ip = $port = $buf = NULL;
             $len = socket_recvfrom($this->socket, $buf, 65535, MSG_DONTWAIT, $ip, $port);
 			if ($len > 0) {
 				//$client_hash = md5($ip .':'. $port);
@@ -80,17 +79,46 @@ class Server {
                     $this->logger->error('Drop packet from ' . $client_hash);
                     unset($this->clients[$client_hash]);
                 }
-            } else {
-                usleep(50000);
             }
             foreach($this->clients as $id => $client) {
                 if ($client->getTimeout() < time()) {
+                    // TODO: send keep alive packet
                     $this->logger->info("Client: $id disconnected by timeout");
                     unset($this->clients[$id]);
                 }
+                foreach($client->getTunnels() as $tunnelId => $tunnel) {
+                    foreach($tunnel->getSessions() as $sessionId => $session) {
+			unset($string);
+			$string = fread($this->pipes[1], 8192);
+			//$string = stream_get_contents($this->pipes[1]);
+			if ($string) {
+				//var_dump("Frame to response: '" . bin2hex($string). "'");
+				$frame = '';
+				$string = str_split($string);
+				$previousByte = null;
+				foreach($string as $i => $byte) {
+					if($i == 0 && $byte != chr(0x7e)) {
+						$frame.=chr(0x7e);	
+					} 
+					$frame.= $byte;
+					if ($byte == chr(0x7e) && !is_null($previousByte) && $previousByte != chr(0x7d)) {
+						break;
+					}
+					$previousByte = $byte;
+				}
+				$string = $frame;
+				//var_dump("Server: '" . bin2hex($string). "'");
+				$string = $ppp->parse($string);
+				$responsePacket = new DataPacket();
+				$responsePacket->setPayload($string);
+			}
+
+                        $this->logger->info("Client: $ip, Tunnel: $tunnelId session: $sessionId");
+                    }
+                }
             }
+            usleep(100);
 		}
 	}
 }
 
-?>

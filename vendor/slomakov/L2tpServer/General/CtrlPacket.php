@@ -45,17 +45,17 @@ class CtrlPacket extends Packet {
 			if (!$this->parse($rawPacket)) {
 				throw new \Exception("Can't parse packet");
 			}
-            return true;
-		}
-        $this->packetType = self::TYPE_CONTROL;
-        $this->isLengthPresent = self::TRUE;
-        $this->isSequencePresent = self::TRUE;
-        $this->isOffsetPresent = self::FALSE;
-        $this->isPrioritized = self::FALSE;
-        $this->Ns = 0;
-        $this->Nr = 0;
-        $this->tunnelId = 0;
-        $this->sessionId = 0;
+		} else {
+            $this->packetType = self::TYPE_CONTROL;
+            $this->isLengthPresent = self::TRUE;
+            $this->isSequencePresent = self::TRUE;
+            $this->isOffsetPresent = self::FALSE;
+            $this->isPrioritized = self::FALSE;
+            $this->Ns = 0;
+            $this->Nr = 0;
+            $this->tunnelId = 0;
+            $this->sessionId = 0;
+        }
         return true;
 	}
 
@@ -124,16 +124,6 @@ class CtrlPacket extends Packet {
             throw new \Exception("Nr must be greater or euqual than 0");
         }
         $this->Nr = $nR % 65536;
-    }
-
-    public function setTunnelId($tunnelId)
-    {
-        $this->tunnelId = $tunnelId;
-    }
-
-    public function setSessionId($sessionId)
-    {
-        $this->sessionId = $sessionId;
     }
 
     public static function create()

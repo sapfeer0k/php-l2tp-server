@@ -184,4 +184,9 @@ class Client
     {
         $this->receivedNumber = ($this->packet->Ns + 1) % 65536; // We'v got a new message
     }
+
+    public function getTunnels()
+    {
+        return is_array($this->tunnels) ? $this->tunnels : array();
+    }
 }

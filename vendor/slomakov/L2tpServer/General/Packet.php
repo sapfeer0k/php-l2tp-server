@@ -39,7 +39,7 @@ abstract class Packet {
 	// Return packet properties encoded as raw string:
     public abstract function encode();
 
-    public abstract function getAVP($type);
+    //public abstract function getAVP($type);
 
     /**
      * @param $name name of property to return
@@ -138,17 +138,21 @@ abstract class Packet {
 
         $header .= pack('C', $firstByte);
         $header .= pack('C', 2); // proto version
-        $header .= pack('n', 0); // two bytes will be replaced by length
+        if ($this->isLengthPresent) {
+            $header .= pack('n', 0); // two bytes will be replaced by length
+        }
         $header .= pack('n', (int)$this->tunnelId);
         $header .= pack('n', (int)$this->sessionId);
         if ($this->isSequencePresent) {
             $header .= pack('n', (int)$this->Ns);
             $header .= pack('n', (int)$this->Nr);
         }
-        // Setting final length:
-        $length = pack('n', $payloadSize + strlen($header));
-        $header[2] = $length[0];
-        $header[3] = $length[1];
+        if ($this->isLengthPresent) {
+            // Setting final length:
+            $length = pack('n', $payloadSize + strlen($header));
+            $header[2] = $length[0];
+            $header[3] = $length[1];
+        }
         return $header;
     }
 
@@ -161,7 +165,16 @@ abstract class Packet {
     {
         return $this->getType() == self::TYPE_DATA;
     }
+
+    public function setTunnelId($tunnelId)
+    {
+        $this->tunnelId = $tunnelId;
+    }
+
+    public function setSessionId($sessionId)
+    {
+        $this->sessionId = $sessionId;
+    }
 }
 
 
-?>

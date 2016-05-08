@@ -68,7 +68,7 @@ class Tunnel
                 break;
             case MT_CDN:
                 $this->logger->info("[TUNNEL] Call-Disconnect-Notify");
-                foreach($this->sessions as $sessionId) {
+                foreach($this->sessions as $sessionId => $session) {
                     unset($this->sessions[$sessionId]);
                     $this->logger->info("[TUNNEL] Destroying session $sessionId");
                     $result = $packet->getAVP(AvpType::RESULT_CODE_AVP)->value;
@@ -161,5 +161,9 @@ class Tunnel
         $responsePacket = new CtrlPacket();
         return $responsePacket;
     }
-
+    
+    public function getSessions()
+    {
+        return is_array($this->sessions) ? $this->sessions : array();
+    }
 }

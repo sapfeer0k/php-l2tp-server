@@ -33,6 +33,7 @@ class Session {
         if ($packet instanceof CtrlPacket) {
             $messageType = $packet->getAvp(AvpType::MESSAGE_TYPE_AVP)->value;
         }
+	$responsePacket = null;
         switch ($messageType) {
             case MT_ICRQ:
                 $this->logger->info("[SESSION] Incoming-Call-Request");
@@ -42,23 +43,24 @@ class Session {
                 break;
             case MT_ICCN:
                 $this->logger->info("[SESSION] Incoming-Call-Connected");
-                //$this->startPPP();
+                $this->startPPP();
                 $responsePacket = $this->generateZLB();
                 break;
             case NULL:
                 $this->logger->info("[SESSION] Data packet");
                 /* @var $packet DataPacket */
-                //fwrite($this->pipes[1], $packet->payload);
-                //$string  = fread($this->pipes[1], 0xFFFF);
-                //var_dump($string);
-                //die;
-                return null;
+                $ppp = new Ppp();
+                //var_dump("Client: " . bin2hex($packet->payload) . ' (' . strlen($packet->payload) . ')');
+                $frame = $ppp->encode($packet->payload);
+                $ret = fwrite($this->pipes[0], $frame);
                 break;
             default:
                 // ? Unknown state!
                 throw new \Exception("Unknown message type $messageType");
         }
-        $responsePacket->setSessionId($this->id);
+	if ($responsePacket) {
+	        $responsePacket->setSessionId($this->id);
+	}
         return $responsePacket;
     }
 
@@ -83,24 +85,28 @@ class Session {
             1 => array("pipe", "w"),  // stdout - канал, в который дочерний процесс будет записывать
             2 => array("file", "/tmp/error-output.txt", "a") // stderr - файл для записи
         );
-        $cwd = '/tmp';
-        $this->process = proc_open('/usr/sbin/pppd passive noauth nodetach debug notty', $descriptorspec, $this->pipes, $cwd);
-        //sleep(1);
+        $command = '/usr/sbin/pppd logfile /var/log/ppp.log noauth debug notty record /tmp/pppd.log nodeflate nobsdcomp noccp noaccomp';
+        $this->process = proc_open($command, $descriptorspec, $this->pipes);
         if (!is_resource($this->process)) {
             // all bad!
             die('Cannot start pppd');
         } else {
-            while (!feof($this->pipes[1])) {
-                $string  = fread($this->pipes[1], 0xFFFF);
-                var_dump($string);
+            foreach($this->pipes as $pipe) {
+                stream_set_blocking($pipe, 0);
             }
         }
     }
 
     private function generateZLB()
     {
-        $this->logger->info("[TUNNEL] ZLB ACK");
+        $this->logger->info("[SESSION] ZLB ACK");
         $responsePacket = new CtrlPacket();
         return $responsePacket;
     }
+
+    public function getOutputPipe()
+    {
+	return $this->pipes[1];
+    }
+ 
 }
