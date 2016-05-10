@@ -33,7 +33,7 @@ class Session {
         if ($packet instanceof CtrlPacket) {
             $messageType = $packet->getAvp(AvpType::MESSAGE_TYPE_AVP)->value;
         }
-	$responsePacket = null;
+	    $responsePacket = null;
         switch ($messageType) {
             case MT_ICRQ:
                 $this->logger->info("[SESSION] Incoming-Call-Request");
@@ -43,14 +43,13 @@ class Session {
                 break;
             case MT_ICCN:
                 $this->logger->info("[SESSION] Incoming-Call-Connected");
-                $this->startPPP();
                 $responsePacket = $this->generateZLB();
                 break;
             case NULL:
                 $this->logger->info("[SESSION] Data packet");
                 /* @var $packet DataPacket */
+                $this->startPPP();
                 $ppp = new Ppp();
-                //var_dump("Client: " . bin2hex($packet->payload) . ' (' . strlen($packet->payload) . ')');
                 $frame = $ppp->encode($packet->payload);
                 $ret = fwrite($this->pipes[0], $frame);
                 break;
@@ -80,12 +79,19 @@ class Session {
 
     protected function startPPP()
     {
+        if (is_resource($this->process)) {
+            $status = proc_get_status($this->process);
+            if (!empty($status) && $status['running']) {
+                return ;
+            }
+        }
         $descriptorspec = array(
             0 => array("pipe", "r"),  // stdin - канал, из которого дочерний процесс будет читать
             1 => array("pipe", "w"),  // stdout - канал, в который дочерний процесс будет записывать
-            2 => array("file", "/tmp/error-output.txt", "a") // stderr - файл для записи
+            2 => array("pipe", "a") // stderr - файл для записи
         );
-        $command = '/usr/sbin/pppd logfile /var/log/ppp.log noauth debug notty record /tmp/pppd.log nodeflate nobsdcomp noccp noaccomp';
+        //$command = '/usr/sbin/pppd logfile /var/log/ppp.log passive noauth debug notty record /tmp/pppd.log nodeflate nobsdcomp noccp noaccomp';
+        $command = '/usr/sbin/pppd logfile /var/log/ppp.log notty file /etc/ppp/options.xl2tpd';
         $this->process = proc_open($command, $descriptorspec, $this->pipes);
         if (!is_resource($this->process)) {
             // all bad!
@@ -106,7 +112,11 @@ class Session {
 
     public function getOutputPipe()
     {
-	return $this->pipes[1];
+	    return $this->pipes[1];
     }
- 
+
+    public function getId()
+    {
+        return $this->id;
+    }
 }

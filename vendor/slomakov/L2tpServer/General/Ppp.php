@@ -52,14 +52,6 @@ protected $ppp_crc16_table = array(
     0x7bc7, 0x6a4e, 0x58d5, 0x495c, 0x3de3, 0x2c6a, 0x1ef1, 0x0f78
 );
 
-
-/*
-$frame = parseFrame('7eff7d23c0217d217d217d207d347d227d267d207d207d207d207d257d26daa3da8c7d277d227d287d22cf7d3e7e');
-$frame_with_fcs = add_fcs($frame);
-echo bin2hex($frame_with_fcs) . PHP_EOL;
-$encoded = ppp_encode($frame_with_fcs);
-echo bin2hex($encoded) . PHP_EOL;
- */
     public function parse($frame) 
     {
         if (empty($frame)) {
@@ -67,12 +59,13 @@ echo bin2hex($encoded) . PHP_EOL;
         }
         $frame_start = chr(0x7e);
         $escape = chr(0x7d);
-        $result = $unescaped = '';
-        //$frame = hex2bin($frame);
-        // TODO: Move me into class
-        if (($frame[0]) == $frame_start && (substr($frame, -1)) == $frame_start) {
-            $result = substr($frame, 0, -1);
+        $unescaped = '';
+        $result = $frame;
+        if (substr($result, 0, 1) == $frame_start) {
             $result = substr($result, 1);
+        }
+        if (substr($result, -1) == $frame_start) {
+            $result = substr($result, 0, -1);
         }
         $i = 0;
         while($i < strlen($result)) {
@@ -134,5 +127,31 @@ public function encode($frame)
     $buffer.= chr(0x7e);
     return $buffer;
 }
+
+    /**
+     * @param $string
+     * @return array
+     */
+    public function split($string)
+    {
+        $frame = '';
+        $string = str_split($string);
+        $previousByte = null;
+        $frames = array();
+        foreach ($string as $i => $byte) {
+            if ($i == 0 && $byte != chr(0x7e)) {
+                $frame .= chr(0x7e);
+            }
+            $frame .= $byte;
+            if ($byte == chr(0x7e) && !is_null($previousByte) && $previousByte != chr(0x7d)) {
+                $frames[] = $frame;
+                $frame = '';
+                $previousByte = null;
+                continue;
+            }
+            $previousByte = $byte;
+        }
+        return $frames;
+    }
 
 }

@@ -44,18 +44,19 @@ class Client
     private $hostname;
     private $tunnels;
     private $timeout;
+    protected $socket;
 
     function __construct($remote_addr, $remote_port)
     {
         if (filter_var($remote_addr, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
             $this->ip_addr = $remote_addr;
         } else {
-            throw new Exception("Client IP address isn't valid");
+            throw new \Exception("Client IP address isn't valid");
         }
         if ($remote_port > 0 && $remote_port < 65535) {
             $this->port = $remote_port;
         } else {
-            throw new Exception("Client port isn't valid");
+            throw new \Exception("Client port isn't valid");
         }
         $this->tunnels = array();
         $this->logger = new Logger('server.log');
@@ -185,8 +186,34 @@ class Client
         $this->receivedNumber = ($this->packet->Ns + 1) % 65536; // We'v got a new message
     }
 
+    /**
+     * @return Tunnel[]
+     */
     public function getTunnels()
     {
         return is_array($this->tunnels) ? $this->tunnels : array();
+    }
+
+    /**
+     * @return string
+     */
+    public function getIp()
+    {
+        return $this->ip_addr;
+    }
+
+    public function send($data)
+    {
+        $retCode = socket_sendto($this->socket, $data, strlen($data), 0, $this->ip_addr, $this->port);
+        $this->logger->info("Response to: {$this->ip_addr}:{$this->port}, data: " . bin2hex($data) . "(" . strlen($data) . ' bytes), actually written: ' . $retCode);
+        return $retCode;
+    }
+
+    public function setSocket($socket)
+    {
+        if(!is_resource($socket)) {
+            throw new \Exception("Invalid socket specified: " . json_encode($socket));
+        }
+        $this->socket = &$socket;
     }
 }

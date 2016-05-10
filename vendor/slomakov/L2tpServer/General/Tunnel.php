@@ -57,6 +57,7 @@ class Tunnel
         if ($packet instanceof CtrlPacket) {
             $messageType = $packet->getAvp(AvpType::MESSAGE_TYPE_AVP)->value;
         }
+        $responsePacket = null;
         switch ($messageType) {
             case MT_SCCRQ: // We've got a request, let's answer then? :-)
                 $this->logger->info("[TUNNEL] Start-Control-Connection-Request");
@@ -75,7 +76,6 @@ class Tunnel
                     $this->logger->info("Result code: $result[resultCode]");
                     $this->logger->info("Error code: $result[errorCode]");
                 }
-                return NULL; // Must not return anything on CDN
                 break;
             case MT_HELLO:
                 $this->logger->info("[TUNNEL] HELLO");
@@ -161,7 +161,10 @@ class Tunnel
         $responsePacket = new CtrlPacket();
         return $responsePacket;
     }
-    
+
+    /**
+     * @return Session[]
+     */
     public function getSessions()
     {
         return is_array($this->sessions) ? $this->sessions : array();
