@@ -63,8 +63,9 @@ class Server
             // Is it new client ?
             if (!isset($this->clients[$client_hash]) || !is_object($this->clients[$client_hash])) {
                 $this->logger->info("New connection: $ip:$port");
-                $this->clients[$client_hash] = new Client($ip, $port);
-                $this->clients[$client_hash]->setSocket($this->socket);
+                $client = new Client($ip, $port);
+                $client->setSocket($this->socket);
+                $this->clients[$client_hash] = $client;
             }
             $this->logger->info("Got data. Client: {$ip}, data: " . bin2hex($buf));
             $packet = Factory::createPacket($buf); /* @var $packet Packet */

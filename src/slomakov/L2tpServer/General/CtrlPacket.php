@@ -99,7 +99,7 @@ class CtrlPacket extends Packet {
     }
 
 	// Return packet properties encoded as raw string:
-	function encode() {
+	public function encode() {
         $packetData = '';
         foreach($this->avps as $avp) { // encode AVP
             /* @var $avp BaseAVP */
@@ -143,6 +143,11 @@ class CtrlPacket extends Packet {
             }
         }
         return NULL;
+    }
+
+    public function getAvpCount()
+    {
+        return count($this->avps);
     }
 
     public function getAVPS()

@@ -39,22 +39,26 @@ class Client
     protected $sentNumber = 0;
     private $ip_addr;
     private $port;
-    /* @var $packet Packet */
     private $packet;
     private $hostname;
     private $tunnels;
     private $timeout;
     protected $socket;
 
-    function __construct($remote_addr, $remote_port)
+    /**
+     * Client constructor.
+     * @param $remoteAddr
+     * @param $remotePort
+     */
+    function __construct($remoteAddr, $remotePort)
     {
-        if (filter_var($remote_addr, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
-            $this->ip_addr = $remote_addr;
+        if (filter_var($remoteAddr, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+            $this->ip_addr = $remoteAddr;
         } else {
             throw new \Exception("Client IP address isn't valid");
         }
-        if ($remote_port > 0 && $remote_port < 65535) {
-            $this->port = $remote_port;
+        if ($remotePort > 0 && $remotePort < 65535) {
+            $this->port = $remotePort;
         } else {
             throw new \Exception("Client port isn't valid");
         }
@@ -63,7 +67,13 @@ class Client
         return true;
     }
 
-    // Packet is object
+    /**
+     * @param Packet $packet
+     * @return CtrlPacket|Packet|null
+     * @throws ClientException
+     * @throws CloseConnectionException
+     * @throws \Exception
+     */
     function processRequest(Packet $packet)
     {
         if (!isset($packet) || !is_object($packet)) {
@@ -81,6 +91,9 @@ class Client
         }
     }
 
+    /**
+     * @param CtrlPacket $packet
+     */
     private function logAVP(CtrlPacket $packet)
     {
         foreach ($packet->getAVPS() as $avp) {
@@ -93,6 +106,12 @@ class Client
         }
     }
 
+    /**
+     * @return CtrlPacket|Packet|null
+     * @throws ClientException
+     * @throws CloseConnectionException
+     * @throws \Exception
+     */
     private function controlRequest()
     {
         /* @var $this->packet CtrlPacket */
@@ -134,7 +153,6 @@ class Client
                 unset($this->tunnels[$serverTunnelId]);
                 $this->logger->info("Closing tunnel $serverTunnelId");
                 throw new CloseConnectionException();
-//                return new CtrlPacket();
             } else {
                 $responsePacket = $tunnel->processRequest($this->packet);
             }
@@ -147,13 +165,17 @@ class Client
             $responsePacket->setNs($this->sentNumber);
             $responsePacket->setNr($this->receivedNumber);
             // Don't increment for ZLB ACK messages
-            if (count($responsePacket->getAVPS())) {
+            if ($responsePacket->getAvpCount()) {
                 $this->incrementSentPacketsNumber();
             }
         }
         return $responsePacket;
     }
 
+    /**
+     * @return Packet|null
+     * @throws \Exception
+     */
     private function dataRequest()
     {
         $serverTunnelId = $this->packet->tunnelId;
@@ -166,21 +188,33 @@ class Client
         return $tunnel->processRequest($this->packet);
     }
 
+    /**
+     * @return mixed
+     */
     public function getTimeout()
     {
         return $this->timeout;
     }
 
+    /**
+     *
+     */
     protected function setTimeout()
     {
         $this->timeout = time() + self::TIMEOUT;
     }
 
+    /**
+     *
+     */
     protected function incrementSentPacketsNumber()
     {
         $this->sentNumber = ($this->sentNumber + 1) % 65536; // We'v got a new message
     }
 
+    /**
+     *
+     */
     protected function incrementReceivedPacketsNumber()
     {
         $this->receivedNumber = ($this->packet->Ns + 1) % 65536; // We'v got a new message
@@ -202,6 +236,10 @@ class Client
         return $this->ip_addr;
     }
 
+    /**
+     * @param $data
+     * @return integer|false
+     */
     public function send($data)
     {
         $retCode = socket_sendto($this->socket, $data, strlen($data), 0, $this->ip_addr, $this->port);
@@ -209,6 +247,10 @@ class Client
         return $retCode;
     }
 
+    /**
+     * @param $socket
+     * @throws \Exception
+     */
     public function setSocket($socket)
     {
         if(!is_resource($socket)) {
