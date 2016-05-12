@@ -3,8 +3,8 @@
 namespace L2tpServer\AVPs;
 
 use L2tpServer\Constants\AvpType;
-use L2tpServer\Constants\Protocol,
-    L2tpServer\Exceptions\AVPException;
+use L2tpServer\Constants\Protocol;
+use L2tpServer\Exceptions\AVPException;
 
 class ProtocolVersionAVP extends BaseAVP
 {
@@ -67,5 +67,4 @@ class ProtocolVersionAVP extends BaseAVP
     {
         return AvpType::PROTOCOL_VERSION_AVP;
     }
-
 }

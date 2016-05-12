@@ -55,5 +55,4 @@ class HostnameAVP extends BaseAVP
     {
         return $this->value;
     }
-
 }

@@ -8,9 +8,9 @@
 
 namespace L2tpServer\Constants;
 
-
-class SessionState {
+class SessionState
+{
     const ICRQ = 10;
     const ICRP = 11;
     const ICCN = 12;
-} 
+}

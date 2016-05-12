@@ -17,7 +17,7 @@ use Packfire\Logger\File as Logger;
 class Server
 {
     protected $logger;
-    protected $ppp;
+    protected $frameParser;
     private $addr;
     private $port;
     private $socket;
@@ -68,7 +68,7 @@ class Server
     protected function receive()
     {
         $idle = true;
-        $ip = $port = $buf = NULL;
+        $ip = $port = $buf = null;
         $len = socket_recvfrom($this->socket, $buf, 65535, MSG_DONTWAIT, $ip, $port);
         if ($len > 0) {
             $client_hash = md5($ip); // xl2tp sents PINGs from different ports
@@ -79,7 +79,7 @@ class Server
                 $client->setSocket($this->socket);
                 $this->clients[$client_hash] = $client;
             }
-            $this->logger->info("Got data. Client: {$ip}, data: " . bin2hex($buf));
+            //$this->logger->info("Got data. Client: {$ip}, data: " . bin2hex($buf));
             $packet = Factory::createPacket($buf);
             /* @var $packet Packet */
             /* @var $response CtrlPacket */
@@ -133,10 +133,9 @@ class Server
                     }
                     $string = stream_get_contents($session->getOutputPipe());
                     if ($string) {
-                        //$this->logger->info("Got data. Client: {$client->getIp()}, Tunnel: $tunnelId session: $sessionId, data: " . bin2hex($string));
-                        $frames = $this->getPpp()->split($string);
+                        $frames = $this->getFrameParser()->split($string);
                         foreach ($frames as $frame) {
-                            $string = $this->getPpp()->parse($frame);
+                            $string = $this->getFrameParser()->decode($frame);
                             $responsePacket = new DataPacket();
                             $responsePacket->setTunnelId($tunnel->getId());
                             $responsePacket->setSessionId($session->getId());
@@ -152,14 +151,13 @@ class Server
     }
 
     /**
-     * @return Ppp
+     * @return PppFrameParser
      */
-    protected function getPpp()
+    protected function getFrameParser()
     {
-        if (!isset($this->ppp) || !$this->ppp instanceof Ppp) {
-            $this->ppp = new Ppp();
+        if (!isset($this->frameParser) || !$this->frameParser instanceof PppFrameParser) {
+            $this->frameParser = new PppFrameParser();
         }
-        return $this->ppp;
+        return $this->frameParser;
     }
 }
-

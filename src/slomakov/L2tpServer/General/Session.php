@@ -7,7 +7,8 @@ use L2tpServer\Constants\AvpType;
 use L2tpServer\Constants\SessionState;
 use Packfire\Logger\File as Logger;
 
-class Session {
+class Session
+{
 
     protected $id;
     protected $internalId;
@@ -29,11 +30,11 @@ class Session {
      */
     public function processRequest(Packet $packet)
     {
-        $messageType = NULL;
+        $messageType = null;
         if ($packet instanceof CtrlPacket) {
-            $messageType = $packet->getAvp(AvpType::MESSAGE_TYPE_AVP)->value;
+            $messageType = $packet->getAVP(AvpType::MESSAGE_TYPE_AVP)->value;
         }
-	    $responsePacket = null;
+        $responsePacket = null;
         switch ($messageType) {
             case MT_ICRQ:
                 $this->logger->info("[SESSION] Incoming-Call-Request");
@@ -45,11 +46,11 @@ class Session {
                 $this->logger->info("[SESSION] Incoming-Call-Connected");
                 $responsePacket = $this->generateZLB();
                 break;
-            case NULL:
-                $this->logger->info("[SESSION] Data packet");
+            case null:
+                //$this->logger->info("[SESSION] Data packet");
                 /* @var $packet DataPacket */
                 $this->startPPP();
-                $ppp = new Ppp();
+                $ppp = new PppFrameParser();
                 $frame = $ppp->encode($packet->payload);
                 $ret = fwrite($this->pipes[0], $frame);
                 break;
@@ -57,9 +58,9 @@ class Session {
                 // ? Unknown state!
                 throw new \Exception("Unknown message type $messageType");
         }
-	if ($responsePacket) {
-	        $responsePacket->setSessionId($this->id);
-	}
+        if ($responsePacket) {
+            $responsePacket->setSessionId($this->id);
+        }
         return $responsePacket;
     }
 
@@ -86,18 +87,17 @@ class Session {
             }
         }
         $descriptorspec = array(
-            0 => array("pipe", "r"),  // stdin - канал, из которого дочерний процесс будет читать
-            1 => array("pipe", "w"),  // stdout - канал, в который дочерний процесс будет записывать
-            2 => array("pipe", "a") // stderr - файл для записи
+            0 => array("pipe", "r"),  // stdin - read pipe
+            1 => array("pipe", "w"),  // stdout - write pipe
+            2 => array("pipe", "a") // stderr - error pipe
         );
-        //$command = '/usr/sbin/pppd logfile /var/log/ppp.log passive noauth debug notty record /tmp/pppd.log nodeflate nobsdcomp noccp noaccomp';
         $command = '/usr/sbin/pppd logfile /var/log/ppp.log notty file /etc/ppp/options.xl2tpd';
         $this->process = proc_open($command, $descriptorspec, $this->pipes);
         if (!is_resource($this->process)) {
             // all bad!
             die('Cannot start pppd');
         } else {
-            foreach($this->pipes as $pipe) {
+            foreach ($this->pipes as $pipe) {
                 stream_set_blocking($pipe, 0);
             }
         }
@@ -112,7 +112,7 @@ class Session {
 
     public function getOutputPipe()
     {
-	    return $this->pipes[1];
+        return $this->pipes[1];
     }
 
     public function getId()

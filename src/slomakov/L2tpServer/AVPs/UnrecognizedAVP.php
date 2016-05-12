@@ -51,5 +51,4 @@ class UnrecognizedAVP extends BaseAVP
     {
         throw new AVPException("You can't get encoded value for unrecognized AVP");
     }
-
 }

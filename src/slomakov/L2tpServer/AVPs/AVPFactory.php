@@ -13,6 +13,11 @@ use L2tpServer\Constants\AvpType;
 class AVPFactory
 {
 
+    /**
+     * @param $params
+     * @return BaseAVP
+     * @throws \Exception
+     */
     public static function create($params)
     {
         if (isset($params['avp_raw_data'])) {

@@ -8,7 +8,6 @@
 
 namespace L2tpServer\AVPs;
 
-
 use L2tpServer\Constants\AvpType;
 use L2tpServer\Exceptions\AVPException;
 
@@ -37,7 +36,7 @@ class VendorNameAVP extends BaseAVP
         $avp->isMandatory = ($avp_flags_len & 32768) ? true : false;
         $avp->isHidden = ($avp_flags_len & 16384) ? true : false;
         $avp->length = ($avp_flags_len & 1023);
-        if ($avp->length < 6 ) {
+        if ($avp->length < 6) {
             throw new AVPException("Invalid length for VendorNameAVP!");
         }
         list( , $avp->vendor_id) = unpack('n', $data[2].$data[3]);
@@ -63,5 +62,4 @@ class VendorNameAVP extends BaseAVP
     {
         return $this->value;
     }
-
-} 
+}

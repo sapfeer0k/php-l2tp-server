@@ -3,8 +3,8 @@
 namespace L2tpServer\AVPs;
 
 use L2tpServer\Constants\AvpType;
-use L2tpServer\Constants\Protocol,
-    L2tpServer\Exceptions\AVPException;
+use L2tpServer\Constants\Protocol;
+use L2tpServer\Exceptions\AVPException;
 
 class RxConnectSpeedAVP extends BaseAVP
 {
@@ -64,5 +64,4 @@ class RxConnectSpeedAVP extends BaseAVP
     {
         return AvpType::RX_CONNECT_SPEED_AVP;
     }
-
 }

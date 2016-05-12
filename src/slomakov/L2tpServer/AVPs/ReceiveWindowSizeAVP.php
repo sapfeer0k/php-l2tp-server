@@ -81,5 +81,3 @@ class ReceiveWindowSizeAVP extends BaseAVP
         return pack('n', $this->value);
     }
 }
-
-?>

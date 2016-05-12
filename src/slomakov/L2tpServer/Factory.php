@@ -19,19 +19,21 @@
 
 namespace L2tpServer;
 
-use L2tpServer\General\CtrlPacket,
-    L2tpServer\General\DataPacket,
-    L2tpServer\General\Packet;
+use L2tpServer\General\CtrlPacket;
+use L2tpServer\General\DataPacket;
+use L2tpServer\General\Packet;
 
-class Factory {
+class Factory
+{
 
-	static function createPacket($raw_data) {
-		list( , $byte) = unpack('C', $raw_data[0]);
+    public static function createPacket($raw_data)
+    {
+        list( , $byte) = unpack('C', $raw_data[0]);
         if ($byte & Packet::TYPE_CONTROL) {
-			$packet = new CtrlPacket($raw_data);
-		} else {
-			$packet = new DataPacket($raw_data);
-		}
-		return $packet;
-	}
+            $packet = new CtrlPacket($raw_data);
+        } else {
+            $packet = new DataPacket($raw_data);
+        }
+        return $packet;
+    }
 }

@@ -7,7 +7,7 @@ use L2tpServer\Exceptions\AVPException;
 
 class FramingTypeAVP extends BaseAVP
 {
-    public function __construct($isHidden = false)
+    public function __construct($isHidden = 0)
     {
         $this->isHidden = $isHidden;
         $this->isMandatory = 1;
@@ -46,7 +46,7 @@ class FramingTypeAVP extends BaseAVP
         */
     }
 
-    public function setValue($value = NULL)
+    public function setValue($value = null)
     {
         // this value is readonly!
         return true;
@@ -69,5 +69,4 @@ class FramingTypeAVP extends BaseAVP
         $value = pack('nn', 0, $value);
         return $value;
     }
-
 }

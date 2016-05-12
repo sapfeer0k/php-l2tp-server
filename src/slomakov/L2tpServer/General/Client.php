@@ -50,7 +50,7 @@ class Client
      * @param $remoteAddr
      * @param $remotePort
      */
-    function __construct($remoteAddr, $remotePort)
+    public function __construct($remoteAddr, $remotePort)
     {
         if (filter_var($remoteAddr, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
             $this->ip_addr = $remoteAddr;
@@ -74,7 +74,7 @@ class Client
      * @throws CloseConnectionException
      * @throws \Exception
      */
-    function processRequest(Packet $packet)
+    public function processRequest(Packet $packet)
     {
         if (!isset($packet) || !is_object($packet)) {
             throw new \Exception("Packet object isn't valid");
@@ -86,7 +86,7 @@ class Client
             $this->logger->info("Receiving control packet");
             return $this->controlRequest();
         } elseif ($this->packet->getType() == Packet::TYPE_DATA) {
-            $this->logger->info("Receiving data packet");
+            //$this->logger->info("Receiving data packet");
             return $this->dataRequest();
         }
     }
@@ -116,12 +116,16 @@ class Client
     private function controlRequest()
     {
         /* @var $this->packet CtrlPacket */
-        if ($this->packet->getAVP(AvpType::MESSAGE_TYPE_AVP) === NULL) {
+        if ($this->packet->getAVP(AvpType::MESSAGE_TYPE_AVP) === null) {
             // ZLB-packet
             return new CtrlPacket();
         }
         $message_type = $this->packet->getAVP(AvpType::MESSAGE_TYPE_AVP)->value;
-        $this->logger->info("control packet info: nR: " . $this->packet->Nr . ', Ns:' . $this->packet->Ns . ' Type: ' . $message_type);
+        $this->logger->info(
+            "control packet info: nR: " . $this->packet->Nr .
+            ', Ns:' . $this->packet->Ns .
+            ' Type: ' . $message_type
+        );
         $this->incrementReceivedPacketsNumber();
         $serverTunnelId = $this->packet->tunnelId;
         if (empty($serverTunnelId) && $message_type == MT_SCCRQ) {
@@ -133,14 +137,14 @@ class Client
             $this->tunnels[$serverTunnelId] = new Tunnel($clientTunnelId, $serverTunnelId);
             // let's fill other properties for client:
             $this->hostname = $this->packet->getAVP(AvpType::HOSTNAME_AVP)->value;
-        } elseif(empty($serverTunnelId)) { // Message is not SCCRQ, but tunnel id is empty
+        } elseif (empty($serverTunnelId)) { // Message is not SCCRQ, but tunnel id is empty
             throw new \Exception("Tunnel not specified for control message");
         }
         // Handle packet:
         if (isset($this->tunnels[$serverTunnelId])) {
             /* @var $tunnel Tunnel */
             $tunnel = $this->tunnels[$serverTunnelId];
-            if ($message_type == MT_StopCCN) {
+            if ($message_type == MT_STOP_CCN) {
                 $this->logger->info("Stop-Control-Connection-Notification");
                 $error = $this->packet->getAVP(AvpType::RESULT_CODE_AVP)->value;
                 $message = ("Result code: $error[resultCode]");
@@ -182,7 +186,9 @@ class Client
         $serverTunnelId = $this->packet->tunnelId;
         /* @var Tunnel $tunnel */
         if (!isset($this->tunnels[$serverTunnelId])) {
-            $this->logger->error("I've got packet for unknown tunnel $serverTunnelId, content: " . var_export($this->packet, true));
+            $this->logger->error(
+                "Got packet for unknown tunnel $serverTunnelId, content: " . var_export($this->packet, true)
+            );
             return null;
         }
         $tunnel = $this->tunnels[$serverTunnelId];
@@ -244,7 +250,13 @@ class Client
     public function send($data)
     {
         $retCode = socket_sendto($this->socket, $data, strlen($data), 0, $this->ip_addr, $this->port);
-        $this->logger->info("Response to: {$this->ip_addr}:{$this->port}, data: " . bin2hex($data) . "(" . strlen($data) . ' bytes), actually written: ' . $retCode);
+        /*
+        $this->logger->info(
+            "Response to: {$this->ip_addr}:{$this->port}" .
+            ", data: " . bin2hex($data) . "(" . strlen($data) . ' bytes)" . 
+            ", actually written: ' . $retCode
+        );
+        */
         return $retCode;
     }
 
@@ -254,7 +266,7 @@ class Client
      */
     public function setSocket($socket)
     {
-        if(!is_resource($socket)) {
+        if (!is_resource($socket)) {
             throw new \Exception("Invalid socket specified: " . json_encode($socket));
         }
         $this->socket = &$socket;

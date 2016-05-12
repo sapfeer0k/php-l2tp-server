@@ -8,7 +8,7 @@
 
 namespace L2tpServer\Exceptions;
 
+class ClientException extends \Exception
+{
 
-class ClientException extends \Exception {
-
-} 
+}

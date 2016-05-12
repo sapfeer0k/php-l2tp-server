@@ -1,30 +1,29 @@
 <?php
 
 /****
-* This file is part of php-L2tpServer-server.
-* Copyright (C) Sergei Lomakov <sergei@lomakov.net>
-*
-* php-L2tpServer-server is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* php-L2tpServer-server is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU General Public License
-* along with php-L2tpServer-server.  If not, see <http://www.gnu.org/licenses/>.
-*
-*****/
+ * This file is part of php-L2tpServer-server.
+ * Copyright (C) Sergei Lomakov <sergei@lomakov.net>
+ *
+ * php-L2tpServer-server is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * php-L2tpServer-server is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with php-L2tpServer-server.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *****/
 
 namespace L2tpServer\General;
 
 use L2tpServer\AVPs\AVPFactory;
 use L2tpServer\Constants\AvpType;
 use L2tpServer\Constants\Protocol;
-use L2tpServer\Constants\TunnelState;
 use Packfire\Logger\File as Logger;
 
 class Tunnel
@@ -53,7 +52,7 @@ class Tunnel
      */
     public function processRequest(Packet $packet)
     {
-        $messageType = NULL;
+        $messageType = null;
         if ($packet instanceof CtrlPacket) {
             $messageType = $packet->getAvp(AvpType::MESSAGE_TYPE_AVP)->value;
         }
@@ -69,7 +68,7 @@ class Tunnel
                 break;
             case MT_CDN:
                 $this->logger->info("[TUNNEL] Call-Disconnect-Notify");
-                foreach($this->sessions as $sessionId => $session) {
+                foreach ($this->sessions as $sessionId => $session) {
                     unset($this->sessions[$sessionId]);
                     $this->logger->info("[TUNNEL] Destroying session $sessionId");
                     $result = $packet->getAVP(AvpType::RESULT_CODE_AVP)->value;
@@ -84,13 +83,14 @@ class Tunnel
             case MT_ICRQ: // Request for a new session
                 $serverSessionId = count($this->sessions) + 1;
                 $sessionId = $packet->getAVP(AvpType::ASSIGNED_SESSION_ID_AVP)->value;
-                $this->logger->info("[TUNNEL] Incoming-Call-Request. Create new client session: $sessionId, internal: $serverSessionId");
+                $message = "[TUNNEL] Incoming-Call-Request. New client session: $sessionId, internal: $serverSessionId";
+                $this->logger->info($message);
                 $this->sessions[$serverSessionId] = new Session($sessionId, $serverSessionId);
                 $responsePacket = $this->sessions[$serverSessionId]->processRequest($packet);
                 break;
             default:
                 $sessionId = $packet->sessionId;
-                $this->logger->info("[TUNNEL] Packet for Session: $sessionId");
+                //$this->logger->info("[TUNNEL] Packet for Session: $sessionId");
                 if (!$sessionId) {
                     var_dump($messageType);
                     throw new \Exception("Session not defined");
@@ -123,7 +123,7 @@ class Tunnel
         $responsePacket->addAVP($avp);
         // Add framing capabilities:
         $avp = AVPFactory::create(AvpType::FRAMING_CAPABILITIES_AVP);
-        $avp->setValue();
+        $avp->setValue(true);
         $responsePacket->addAVP($avp);
         // Set host name:
         $avp = AVPFactory::create(AvpType::HOSTNAME_AVP);
@@ -150,16 +150,16 @@ class Tunnel
         return $responsePacket;
     }
 
-    public function getId()
-    {
-        return $this->id;
-    }
-
     private function generateZLB()
     {
         $this->logger->info("[TUNNEL] ZLB ACK");
         $responsePacket = new CtrlPacket();
         return $responsePacket;
+    }
+
+    public function getId()
+    {
+        return $this->id;
     }
 
     /**

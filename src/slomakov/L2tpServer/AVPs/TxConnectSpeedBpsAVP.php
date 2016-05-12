@@ -40,7 +40,7 @@ class TxConnectSpeedBpsAVP extends BaseAVP
             throw new SessionException("(Tx) Connect Speed BPS should be mandatory AVP");
         }
         if ($this->value < 0 || $this->value >= 0xFFFFFFFF) {
-            throw new SessionException("(Tx) Connect Speed BPS should be greater than 0 and less than 0x0xFFFFFFFF, got: {$this->value}");
+            throw new SessionException("(Tx) Connect Speed BPS should be > 0 and < 0x0xFFFFFFFF, got: {$this->value}");
         }
     }
 

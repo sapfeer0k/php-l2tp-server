@@ -8,7 +8,7 @@
 
 namespace L2tpServer\Exceptions;
 
+class AVPException extends \Exception
+{
 
-class AVPException extends \Exception {
-
-} 
+}

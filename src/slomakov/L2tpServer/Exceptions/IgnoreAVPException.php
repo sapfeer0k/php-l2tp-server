@@ -2,8 +2,7 @@
 
 namespace L2tpServer\Exceptions;
 
-class IgnoreAVPException extends \Exception {
+class IgnoreAVPException extends \Exception
+{
 
 }
-
-?>

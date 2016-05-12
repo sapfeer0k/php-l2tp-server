@@ -20,20 +20,19 @@
  */
 
 namespace L2tpServer\Constants;
+
 /**
  * Description of constants_tunnel
  *
  * @author "Sergei Lomakov <sergei@lomakov.net>"
  */
-class TunnelState {
-	const TUNNEL_STATE_NULL = 0;
-	const TUNNEL_STATE_SCCRQ = 1;
-	const TUNNEL_STATE_SCCRP = 2;
-	const TUNNEL_STATE_SCCCN = 3;
-	const TUNNEL_STATE_STOPCCN = 4;
-	const TUNNEL_STATE_HELLO = 6;
+class TunnelState
+{
+    const TUNNEL_STATE_NULL = 0;
+    const TUNNEL_STATE_SCCRQ = 1;
+    const TUNNEL_STATE_SCCRP = 2;
+    const TUNNEL_STATE_SCCCN = 3;
+    const TUNNEL_STATE_STOPCCN = 4;
+    const TUNNEL_STATE_HELLO = 6;
     const TUNNEL_STATE_ICRQ = 10;
 }
-
-
-?>

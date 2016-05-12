@@ -2,42 +2,44 @@
 
 namespace L2tpServer\General;
 
-abstract class Packet {
+abstract class Packet
+{
 
     const TYPE_CONTROL = 128,
         TYPE_DATA = 0;
 
-	protected $isLengthPresent;
-	protected $isSequencePresent;
-	protected $isOffsetPresent;
-	protected $isPrioritized;
+    protected $isLengthPresent;
+    protected $isSequencePresent;
+    protected $isOffsetPresent;
+    protected $isPrioritized;
 
-	protected $protoVersion = 2; // always must be 2
-	protected $packetType;
+    protected $protoVersion = 2; // always must be 2
+    protected $packetType;
 
-	protected $length;
-	protected $tunnelId;
-	protected $sessionId;
-	protected $Ns;
-	protected $Nr;
-	protected $error;
+    protected $length;
+    protected $tunnelId;
+    protected $sessionId;
+    protected $Ns;
+    protected $Nr;
+    protected $error;
     protected $offset;
 
-	public function __construct($rawPacket=false) {
-		if ($rawPacket) {
-			if (!$this->parse($rawPacket)) {
-				throw new \Exception("Can't parse packet");
-			}
-		}
-	}
+    public function __construct($rawPacket = false)
+    {
+        if ($rawPacket) {
+            if (!$this->parse($rawPacket)) {
+                throw new \Exception("Can't parse packet");
+            }
+        }
+    }
 
     public function getType()
     {
         return $this->packetType;
     }
 
-	// Return packet properties encoded as raw string:
-    public abstract function encode();
+    // Return packet properties encoded as raw string:
+    abstract public function encode();
 
     //public abstract function getAVP($type);
 
@@ -46,23 +48,24 @@ abstract class Packet {
      * @return mixed return any property data
      * @throws \Exception
      */
-    public function __get($name) {
-		if (method_exists($this, ($method = 'get'.ucfirst($name)))) {
-			return $this->$method;
-		} else {
-			if (property_exists($this, $name)) {
-				return $this->$name;
-			} else {
-				throw new \Exception("You're trying to read property '$name' which doesn't exist");
-			}
-		}
-	}
+    public function __get($name)
+    {
+        if (method_exists($this, ($method = 'get'.ucfirst($name)))) {
+            return $this->$method;
+        } else {
+            if (property_exists($this, $name)) {
+                return $this->$name;
+            } else {
+                throw new \Exception("You're trying to read property '$name' which doesn't exist");
+            }
+        }
+    }
 
     /**
      * @param $packet
      * @return mixed
      */
-    protected abstract function parse($packet);
+    abstract protected function parse($packet);
 
     /**
      * @param string $packet - binary representation of the header
@@ -71,7 +74,7 @@ abstract class Packet {
      */
     protected function parseHeader($packet)
     {
-        list( , $byte) = unpack('C',$packet[0]);
+        list( , $byte) = unpack('C', $packet[0]);
         if (($byte & 128) == Packet::TYPE_CONTROL) {
             $this->packetType = Packet::TYPE_CONTROL;
         } else {
@@ -95,7 +98,7 @@ abstract class Packet {
             throw new \Exception("Priority field should be 0 for Control messages");
         }
         unset($byte); // little cleanup
-        list( , $byte2) = unpack('C',$packet[1]);
+        list( , $byte2) = unpack('C', $packet[1]);
         $this->protoVersion = ($byte2 & 15 );
         if ($this->protoVersion != 2) {
             throw new \Exception("Unsupported protocol version {$this->protoVersion}");
@@ -117,7 +120,9 @@ abstract class Packet {
 
     public function getHeaderLength()
     {
-        return 6 + ($this->isLengthPresent ? 2 : 0) + ($this->isSequencePresent ? 4 : 0) + ($this->isOffsetPresent ? 2 + $this->offset : 0);
+        return 6 + ($this->isLengthPresent ? 2 : 0)
+            + ($this->isSequencePresent ? 4 : 0)
+            + ($this->isOffsetPresent ? 2 + $this->offset : 0);
     }
 
     /**
@@ -176,5 +181,3 @@ abstract class Packet {
         $this->sessionId = $sessionId;
     }
 }
-
-

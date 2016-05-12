@@ -2,8 +2,7 @@
 
 namespace L2tpServer\Exceptions;
 
-class SessionException extends \Exception {
+class SessionException extends \Exception
+{
 
 }
-
-?>

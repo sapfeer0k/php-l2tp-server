@@ -7,45 +7,47 @@ namespace L2tpServer\General;
 define('MT_SCCRQ', 1);
 define('MT_SCCRP', 2);
 define('MT_SCCCN', 3);
-define('MT_StopCCN', 4);
+define('MT_STOP_CCN', 4);
 // 5 is reserved
 define('MT_HELLO', 6);
 
 // Call managment:
-define('MT_OCRQ' , 7);
-define('MT_OCRP' , 8);
-define('MT_OCCN' , 9);
-define('MT_ICRQ' , 10);
-define('MT_ICRP' , 11);
-define('MT_ICCN' , 12);
+define('MT_OCRQ', 7);
+define('MT_OCRP', 8);
+define('MT_OCCN', 9);
+define('MT_ICRQ', 10);
+define('MT_ICRP', 11);
+define('MT_ICCN', 12);
 // 13 is reserved
-define('MT_CDN' , 14);
+define('MT_CDN', 14);
 // Error Reporting
 define('MT_WEN', 15);
 // PPP Session Control
 define('MT_SLI', 16);
 
-use L2tpServer\AVPs\AVPFactory,
-    L2tpServer\Constants\AvpType,
-    L2tpServer\Exceptions\TunnelException,
-    L2tpServer\Exceptions\IgnoreAVPException,
-    L2tpServer\AVPs\BaseAVP;
+use L2tpServer\AVPs\AVPFactory;
+use L2tpServer\Constants\AvpType;
+use L2tpServer\Exceptions\TunnelException;
+use L2tpServer\Exceptions\IgnoreAVPException;
+use L2tpServer\AVPs\BaseAVP;
 use Packfire\Logger\File as Logger;
 
-class CtrlPacket extends Packet {
+class CtrlPacket extends Packet
+{
 
     const TRUE = 1;
     const FALSE = 0;
 
-	protected $avps = array();
+    protected $avps = array();
 
-    public function __construct($rawPacket=false) {
+    public function __construct($rawPacket = false)
+    {
         $this->logger = new Logger('server.log');
-		if ($rawPacket) {
-			if (!$this->parse($rawPacket)) {
-				throw new \Exception("Can't parse packet");
-			}
-		} else {
+        if ($rawPacket) {
+            if (!$this->parse($rawPacket)) {
+                throw new \Exception("Can't parse packet");
+            }
+        } else {
             $this->packetType = self::TYPE_CONTROL;
             $this->isLengthPresent = self::TRUE;
             $this->isSequencePresent = self::TRUE;
@@ -57,7 +59,7 @@ class CtrlPacket extends Packet {
             $this->sessionId = 0;
         }
         return true;
-	}
+    }
 
     public function addAVP(BaseAVP $avp)
     {
@@ -65,20 +67,21 @@ class CtrlPacket extends Packet {
         return true;
     }
 
-	protected function parse($packet) {
+    protected function parse($packet)
+    {
         $this->parseHeader($packet);
-		// Further we'll work with $packet_data property:
-		$payload = substr($packet, 12);
+        // Further we'll work with $packet_data property:
+        $payload = substr($packet, 12);
         if (strlen($payload)) {
             $this->parseAVPs($payload);
         }
-		return true;
-	}
+        return true;
+    }
 
     protected function parseAVPs($payload)
     {
         // let's parse packet's AVPs:
-        while(strlen($payload)) {
+        while (strlen($payload)) {
             // Get AVPs length:
             list( , $avp_bytes) = unpack('n', $payload[0].$payload[1]);
             $avp_len = $avp_bytes & 1023;
@@ -98,17 +101,18 @@ class CtrlPacket extends Packet {
         }
     }
 
-	// Return packet properties encoded as raw string:
-	public function encode() {
+    // Return packet properties encoded as raw string:
+    public function encode()
+    {
         $packetData = '';
-        foreach($this->avps as $avp) { // encode AVP
+        foreach ($this->avps as $avp) { // encode AVP
             /* @var $avp BaseAVP */
             $packetData .= $avp->encode();
         }
         $header = $this->encodeHeader(strlen($packetData)); // encode header
         $this->length = strlen($header . $packetData);
-		return $header . $packetData;
-	}
+        return $header . $packetData;
+    }
 
     public function setNs($nS)
     {
@@ -137,13 +141,13 @@ class CtrlPacket extends Packet {
      */
     public function getAVP($type)
     {
-        foreach($this->avps as $avp) {
+        foreach ($this->avps as $avp) {
             /* @var $avp BaseAVP */
             if ($avp->getType() == $type) {
                 return $avp;
             }
         }
-        return NULL;
+        return null;
     }
 
     public function getAvpCount()
@@ -156,8 +160,4 @@ class CtrlPacket extends Packet {
         // DEBUG METHOD ONLY
         return $this->avps;
     }
-
 }
-
-
-?>

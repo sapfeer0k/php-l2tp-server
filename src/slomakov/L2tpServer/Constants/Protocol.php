@@ -8,8 +8,8 @@
 
 namespace L2tpServer\Constants;
 
-
-class Protocol {
+class Protocol
+{
     const VERSION = 1,
         REVISION = 0;
-} 
+}

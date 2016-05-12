@@ -2,10 +2,10 @@
 
 namespace L2tpServer\AVPs;
 
-use L2tpServer\Constants\AvpType,
-    L2tpServer\Exceptions\AVPException,
-    L2tpServer\Exceptions\TunnelException,
-    L2tpServer\Exceptions\PackageException;
+use L2tpServer\Constants\AvpType;
+use L2tpServer\Exceptions\AVPException;
+use L2tpServer\Exceptions\TunnelException;
+use L2tpServer\Exceptions\PackageException;
 
 class ResultCodeAVP extends BaseAVP
 {

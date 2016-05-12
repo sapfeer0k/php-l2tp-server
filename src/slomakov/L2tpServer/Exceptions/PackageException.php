@@ -2,8 +2,7 @@
 
 namespace L2tpServer\Exceptions;
 
-class PackageException extends \Exception {
+class PackageException extends \Exception
+{
 
 }
-
-?>

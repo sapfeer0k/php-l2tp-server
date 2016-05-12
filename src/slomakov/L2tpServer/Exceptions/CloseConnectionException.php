@@ -8,7 +8,7 @@
 
 namespace L2tpServer\Exceptions;
 
+class CloseConnectionException extends \Exception
+{
 
-class CloseConnectionException extends \Exception {
-
-} 
+}
