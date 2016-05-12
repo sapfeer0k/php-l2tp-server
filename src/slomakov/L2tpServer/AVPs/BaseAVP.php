@@ -4,22 +4,21 @@ namespace L2tpServer\AVPs;
 
 use L2tpServer\Exceptions\AVPException;
 
-
 abstract class BaseAVP
 {
-    protected $is_mandatory;
-    protected $is_hidden;
+    protected $isMandatory;
+    protected $isHidden;
     protected $value;
     protected $length;
     protected $vendor_id;
-    protected $type;
+    //protected $type;
     protected $is_ignored;
 
     public function __construct()
     {
-        if ($this->type === NULL) {
-            throw new AVPException("Type must be defined in every AVP");
-        }
+//        if ($this->type === null) {
+//            throw new AVPException("Type must be defined in every AVP");
+//        }
         $this->vendor_id = 0;
     }
 
@@ -46,17 +45,17 @@ abstract class BaseAVP
 
     public function encode()
     {
-        if ($this->type === null) {
-            throw new AVPException("AVP type must be defined");
-        }
-        if ($this->value === NULL) {
-            throw new AVPException("Value is not defined for AVP type {$this->type}");
+//        if ($this->type === null) {
+//            throw new AVPException("AVP type must be defined");
+//        }
+        if ($this->value === null) {
+            throw new AVPException("Value is not defined for AVP type {$this->getType()}");
         }
         $flags = 0;
-        if ($this->is_mandatory) {
+        if ($this->isMandatory) {
             $flags += 32768;
         }
-        if ($this->is_hidden) {
+        if ($this->isHidden) {
             throw new \Exception("Implement hidden encoding for AVP");
             $flags += 16384;
         }
@@ -64,16 +63,17 @@ abstract class BaseAVP
             throw new \Exception("Length too big");
         }
 
-        $payload = pack('nn', $this->vendor_id, $this->type) .  $this->getEncodedValue();
+        $payload = pack('nn', $this->vendor_id, $this->getType()) . $this->getEncodedValue();
         $this->length = 2 + strlen($payload); // first two bytes + all other data
         $flags += $this->length;
         return pack("n", $flags) . $payload;
     }
 
-    public abstract function setValue($value);
+    abstract protected function getEncodedValue();
 
-    protected abstract function getEncodedValue();
+    abstract public function setValue($value);
 
-    protected abstract function validate();
+    abstract public function getType();
 
+    abstract protected function validate();
 }

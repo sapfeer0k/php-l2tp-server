@@ -10,23 +10,23 @@ class ProtocolVersionAVP extends BaseAVP
 {
     public function __construct()
     {
-        $this->is_hidden = 0;
-        $this->is_mandatory = 1;
-        $this->type = AvpType::PROTOCOL_VERSION_AVP;
+        $this->isHidden = 0;
+        $this->isMandatory = 1;
+        parent::__construct();
     }
 
     public static function import($data)
     {
         $avp = new self();
         list(, $avp_flags_len) = unpack('n', $data[0] . $data[1]);
-        $avp->is_mandatory = ($avp_flags_len & 32768) ? true : false;
-        $avp->is_hidden = ($avp_flags_len & 16384) ? true : false;
+        $avp->isMandatory = ($avp_flags_len & 32768) ? true : false;
+        $avp->isHidden = ($avp_flags_len & 16384) ? true : false;
         $avp->length = ($avp_flags_len & 1023);
         if ($avp->length != 8) {
             throw new AVPException("Invalid length for protocol version AVP!");
         }
         list(, $avp->vendor_id) = unpack('n', $data[2] . $data[3]);
-        list(, $avp->type) = unpack('n', $data[4] . $data[5]);
+        list(, $type) = unpack('n', $data[4] . $data[5]);
         $avp->value = array();
         list(, $avp->value["version"]) = unpack('C', $data[6]);
         list(, $avp->value["revision"]) = unpack('C', $data[7]);
@@ -36,10 +36,10 @@ class ProtocolVersionAVP extends BaseAVP
 
     protected function validate()
     {
-        if (!$this->is_mandatory) {
+        if (!$this->isMandatory) {
             throw new AVPException("Protocol version AVP must be MANDATORY");
         }
-        if ($this->is_hidden) {
+        if ($this->isHidden) {
             throw new AVPException("Protocol version AVP must not be HIDDEN");
         }
         if ($this->value['version'] != Protocol::VERSION || $this->value['revision'] != Protocol::REVISION) {
@@ -61,6 +61,11 @@ class ProtocolVersionAVP extends BaseAVP
     {
         $value = ($this->value['version'] << 8) + $this->value['revision'];
         return pack('n', $value);
+    }
+
+    public function getType()
+    {
+        return AvpType::PROTOCOL_VERSION_AVP;
     }
 
 }

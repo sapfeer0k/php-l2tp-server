@@ -12,6 +12,7 @@ namespace L2tpServer\Constants;
  * @author Сергей
  */
 class AvpType {
+	const UNKNOWN_AVP = -1;
 	const MESSAGE_TYPE_AVP = 0;
 	const RESULT_CODE_AVP = 1;
 	const PROTOCOL_VERSION_AVP = 2;

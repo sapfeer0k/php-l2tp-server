@@ -17,12 +17,17 @@ use Packfire\Logger\File as Logger;
 class Server
 {
     protected $logger;
+    protected $ppp;
     private $addr;
     private $port;
     private $socket;
     private $clients;
-    protected $ppp;
 
+    /**
+     * Server constructor.
+     * @param string $addr
+     * @param int $port
+     */
     public function __construct($addr = "0.0.0.0", $port = 1701)
     {
         $this->logger = new Logger('server.log');
@@ -37,6 +42,9 @@ class Server
         return;
     }
 
+    /**
+     * @throws ServerException
+     */
     public function run()
     {
         if (socket_bind($this->socket, $this->addr, $this->port) == false) {
@@ -53,6 +61,10 @@ class Server
         }
     }
 
+    /**
+     * @return bool
+     * @throws \Exception
+     */
     protected function receive()
     {
         $idle = true;
@@ -68,7 +80,8 @@ class Server
                 $this->clients[$client_hash] = $client;
             }
             $this->logger->info("Got data. Client: {$ip}, data: " . bin2hex($buf));
-            $packet = Factory::createPacket($buf); /* @var $packet Packet */
+            $packet = Factory::createPacket($buf);
+            /* @var $packet Packet */
             /* @var $response CtrlPacket */
             try {
                 $response = $this->getClient($client_hash)->processRequest($packet);
@@ -89,11 +102,25 @@ class Server
         return $idle;
     }
 
+    /**
+     * @param $hash
+     * @return Client
+     */
+    protected function getClient($hash)
+    {
+        // Todo: check existance!
+        return $this->clients[$hash];
+    }
+
+    /**
+     * @return bool
+     */
     protected function deliver()
     {
         $idle = true;
         foreach ($this->clients as $id => $client) {
-            if ($client->getTimeout() < time()) { /* @var $client Client */
+            if ($client->getTimeout() < time()) {
+                /* @var $client Client */
                 // TODO: send keep alive packet
                 $this->logger->info("Client: $id disconnected by timeout");
                 unset($this->clients[$id]);
@@ -108,7 +135,7 @@ class Server
                     if ($string) {
                         //$this->logger->info("Got data. Client: {$client->getIp()}, Tunnel: $tunnelId session: $sessionId, data: " . bin2hex($string));
                         $frames = $this->getPpp()->split($string);
-                        foreach($frames as $frame) {
+                        foreach ($frames as $frame) {
                             $string = $this->getPpp()->parse($frame);
                             $responsePacket = new DataPacket();
                             $responsePacket->setTunnelId($tunnel->getId());
@@ -122,16 +149,6 @@ class Server
             }
         }
         return $idle;
-    }
-
-    /**
-     * @param $hash
-     * @return Client
-     */
-    protected function getClient($hash)
-    {
-        // Todo: check existance!
-        return $this->clients[$hash];
     }
 
     /**

@@ -42,9 +42,9 @@ abstract class Packet {
     //public abstract function getAVP($type);
 
     /**
-     * @param $name name of property to return
+     * @param string $name name of property to return
      * @return mixed return any property data
-     * @throws Exception
+     * @throws \Exception
      */
     public function __get($name) {
 		if (method_exists($this, ($method = 'get'.ucfirst($name)))) {
@@ -124,7 +124,7 @@ abstract class Packet {
      * @param $payloadSize
      * @return string
      */
-    protected function formatHeader($payloadSize)
+    protected function encodeHeader($payloadSize)
     {
         $header = '';
         $firstByte = 0;

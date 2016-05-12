@@ -92,7 +92,7 @@ class CtrlPacket extends Packet {
 
             unset($avp_len, $avp_bytes);
         }
-        if ($this->avps[0]->type != AvpType::MESSAGE_TYPE_AVP) {
+        if ($this->avps[0]->getType() != AvpType::MESSAGE_TYPE_AVP) {
             throw new TunnelException("Message type AVP not found in the packet");
             //$this->message_type = $this->avps[0]->value;
         }
@@ -105,7 +105,7 @@ class CtrlPacket extends Packet {
             /* @var $avp BaseAVP */
             $packetData .= $avp->encode();
         }
-        $header = $this->formatHeader(strlen($packetData)); // encode header
+        $header = $this->encodeHeader(strlen($packetData)); // encode header
         $this->length = strlen($header . $packetData);
 		return $header . $packetData;
 	}
@@ -138,7 +138,8 @@ class CtrlPacket extends Packet {
     public function getAVP($type)
     {
         foreach($this->avps as $avp) {
-            if ($avp->type == $type) {
+            /* @var $avp BaseAVP */
+            if ($avp->getType() == $type) {
                 return $avp;
             }
         }
@@ -150,7 +151,7 @@ class CtrlPacket extends Packet {
         return count($this->avps);
     }
 
-    public function getAVPS()
+    public function getAvps()
     {
         // DEBUG METHOD ONLY
         return $this->avps;

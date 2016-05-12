@@ -10,23 +10,23 @@ class RxConnectSpeedAVP extends BaseAVP
 {
     public function __construct()
     {
-        $this->is_hidden = 0;
-        $this->is_mandatory = 0;
-        $this->type = AvpType::RX_CONNECT_SPEED_AVP;
+        $this->isHidden = 0;
+        $this->isMandatory = 0;
+        parent::__construct();
     }
 
     public static function import($data)
     {
         $avp = new self();
         list(, $avp_flags_len) = unpack('n', $data[0] . $data[1]);
-        $avp->is_mandatory = ($avp_flags_len & 32768) ? true : false;
-        $avp->is_hidden = ($avp_flags_len & 16384) ? true : false;
+        $avp->isMandatory = ($avp_flags_len & 32768) ? true : false;
+        $avp->isHidden = ($avp_flags_len & 16384) ? true : false;
         $avp->length = ($avp_flags_len & 1023);
         if ($avp->length != 10) {
             throw new AVPException("Invalid length for Rx Connect Speed AVP!");
         }
         list(, $avp->vendor_id) = unpack('n', $data[2] . $data[3]);
-        list(, $avp->type) = unpack('n', $data[4] . $data[5]);
+        list(, $type) = unpack('n', $data[4] . $data[5]);
         $avp->value = array();
         list(, $avp->value["low"]) = unpack('n', $data[6] . $data[7]);
         list(, $avp->value["high"]) = unpack('n', $data[8] . $data[9]);
@@ -36,10 +36,10 @@ class RxConnectSpeedAVP extends BaseAVP
 
     protected function validate()
     {
-        if ($this->is_mandatory) {
+        if ($this->isMandatory) {
             throw new AVPException("Protocol version AVP must not be MANDATORY");
         }
-        if ($this->is_hidden) {
+        if ($this->isHidden) {
             throw new AVPException("Protocol version AVP must not be HIDDEN");
         }
     }
@@ -58,6 +58,11 @@ class RxConnectSpeedAVP extends BaseAVP
     {
         $value = ($this->value['version'] << 8) + $this->value['revision'];
         return pack('n', $value);
+    }
+
+    public function getType()
+    {
+        return AvpType::RX_CONNECT_SPEED_AVP;
     }
 
 }

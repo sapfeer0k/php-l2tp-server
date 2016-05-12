@@ -7,40 +7,37 @@ use L2tpServer\Exceptions\AVPException;
 
 class FramingTypeAVP extends BaseAVP
 {
-    public function __construct($isHidden=false)
+    public function __construct($isHidden = false)
     {
-        $this->is_hidden = $isHidden;
-        $this->is_mandatory = 1;
-        $this->type = AvpType::FRAMING_TYPE_AVP;
-		$this->value = array("async" => 0, "sync" => 0, ); // readonly value!
+        $this->isHidden = $isHidden;
+        $this->isMandatory = 1;
+        $this->value = array("async" => 0, "sync" => 0,); // readonly value!
+        parent::__construct();
     }
 
-    public static function import($data) {
+    public static function import($data)
+    {
         $avp = new self();
-		list( , $avp_flags_len) = unpack('n', $data[0].$data[1]);
-		$avp->is_mandatory = ($avp_flags_len & 32768) ? 1 : 0;
-		$avp->is_hidden = ($avp_flags_len & 16384) ? 1 : 0;
-		$avp->length = ($avp_flags_len & 1023);
-		if (!$avp->is_hidden && $avp->length != 10) {
-			throw new AVPException("Invalid length for Framing Capabilities AVP!");
-		}
-		list( , $avp->vendor_id) = unpack('n', $data[2].$data[3]);
-		list( , $avp->type) = unpack('n', $data[4].$data[5]);
-		$avp->value = array();
-		list( , $flag_byte) = unpack('C', $data[9]);
+        list(, $avp_flags_len) = unpack('n', $data[0] . $data[1]);
+        $avp->isMandatory = ($avp_flags_len & 32768) ? 1 : 0;
+        $avp->isHidden = ($avp_flags_len & 16384) ? 1 : 0;
+        $avp->length = ($avp_flags_len & 1023);
+        if (!$avp->isHidden && $avp->length != 10) {
+            throw new AVPException("Invalid length for Framing Capabilities AVP!");
+        }
+        list(, $avp->vendor_id) = unpack('n', $data[2] . $data[3]);
+        list(, $type) = unpack('n', $data[4] . $data[5]);
+        $avp->value = array();
+        list(, $flag_byte) = unpack('C', $data[9]);
 
-		$avp->value["async"] = ($flag_byte & 2) ? 1 : 0;
-		$avp->value["sync"] = ($flag_byte & 1) ? 1 : 0;
-		$avp->validate();
+        $avp->value["async"] = ($flag_byte & 2) ? 1 : 0;
+        $avp->value["sync"] = ($flag_byte & 1) ? 1 : 0;
+        $avp->validate();
         return $avp;
-	}
+    }
 
-	public function setValue($value=NULL) {
-		// this value is readonly!
-        return true;
-	}
-
-	public function validate() {
+    public function validate()
+    {
         // TODO: do we really need this check?
         /*
 			if (!$this->value['sync']) {
@@ -49,6 +46,23 @@ class FramingTypeAVP extends BaseAVP
         */
     }
 
+    public function setValue($value = NULL)
+    {
+        // this value is readonly!
+        return true;
+    }
+
+    /**
+     * @return int
+     */
+    public function getType()
+    {
+        return AvpType::FRAMING_TYPE_AVP;
+    }
+
+    /**
+     * @return mixed
+     */
     protected function getEncodedValue()
     {
         $value = $this->value['async'] * 2 + $this->value['sync'];

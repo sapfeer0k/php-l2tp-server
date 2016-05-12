@@ -122,11 +122,11 @@ class AVPFactory
                 $avp = new ResultCodeAVP();
                 break;
             default:
-                // default AVPs
+                // default AVPs , still not all avps are implemented, needs to be checked
                 throw new \Exception("Trying to create unknown AVP");
+                // right behaviour:
                 $avp = new UnrecognizedAVP();
         }
         return $avp;
     }
-
-} 
+}

@@ -33,8 +33,8 @@ class MessageTypeAVPTest extends PHPUnit_Framework_TestCase
 
 	public function testConstructor() {
 		$avp = new MessageTypeAVP();
-		$this->assertEquals(true, $avp->is_mandatory);
-		$this->assertEquals(false, $avp->is_hidden);
+		$this->assertEquals(true, $avp->isMandatory);
+		$this->assertEquals(false, $avp->isHidden);
 	}
 
 	/**

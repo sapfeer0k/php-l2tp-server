@@ -2,6 +2,7 @@
 
 namespace L2tpServer\AVPs;
 
+use L2tpServer\Constants\AvpType;
 use L2tpServer\Exceptions\AVPException;
 
 class UnrecognizedAVP extends BaseAVP
@@ -9,16 +10,25 @@ class UnrecognizedAVP extends BaseAVP
 
     public function __construct()
     {
-        $this->type = -1;
+        parent::__construct();
     }
 
     public static function import($data)
     {
         $avp = new self();
-        list(, $avp_flags_len) = unpack('n', $data[0] . $data[1]);
-        $avp->is_mandatory = ($avp_flags_len & 32768) ? true : false;
+        list(, $avpFlagsLength) = unpack('n', $data[0] . $data[1]);
+        $avp->isMandatory = ($avpFlagsLength & 32768) ? 1 : 0;
         $avp->validate();
         return $avp;
+    }
+
+    protected function validate()
+    {
+        if ($this->isMandatory) {
+            throw new AVPException("Unknown mandatory AVP!");
+        } else {
+            $this->is_ignored = true;
+        }
     }
 
     public function isIgnored()
@@ -32,13 +42,9 @@ class UnrecognizedAVP extends BaseAVP
         throw new AVPException("You can't change value for unrecognized AVP");
     }
 
-    protected function validate()
+    public function getType()
     {
-        if ($this->is_mandatory) {
-            throw new AVPException("Unknown mandatory AVP!");
-        } else {
-            $this->is_ignored = true;
-        }
+        return AvpType::UNKNOWN_AVP;
     }
 
     protected function getEncodedValue()

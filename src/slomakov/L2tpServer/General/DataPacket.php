@@ -11,7 +11,7 @@ class DataPacket extends Packet {
 	public function __construct($rawPacket=false) {
 		if ($rawPacket) {
 			if (!$this->parse($rawPacket)) {
-				throw new Exception("Can't parse packet");
+				throw new \Exception("Can't parse packet");
 			}
         } else {
              $this->packetType = self::TYPE_DATA;
@@ -44,7 +44,7 @@ class DataPacket extends Packet {
 
 	// Return packet properties encoded as raw string:
 	public function encode() {
-        $header = $this->formatHeader(strlen($this->payload)); // encode header
+        $header = $this->encodeHeader(strlen($this->payload)); // encode header
         return $header . $this->payload;
 	}
 

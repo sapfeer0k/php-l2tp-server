@@ -32,7 +32,7 @@ class AssignedTunnelIdAVPTest extends PHPUnit_Framework_TestCase {
 
 	public function testConstructor() {
 		$avp = new AssignedTunnelIdAVP();
-		$this->assertEquals(true, $avp->is_mandatory);
+		$this->assertEquals(true, $avp->isMandatory);
 	}
 
 	/**

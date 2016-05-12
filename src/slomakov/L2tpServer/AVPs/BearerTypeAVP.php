@@ -8,11 +8,10 @@ use L2tpServer\Exceptions\AVPException;
 class BearerTypeAVP extends BaseAVP
 {
 
-    public function __construct($isHidden=0)
+    public function __construct($isHidden = 0)
     {
-        $this->type = AvpType::BEARER_TYPE_AVP;
-        $this->is_mandatory = 1;
-        $this->is_hidden = $isHidden;
+        $this->isMandatory = 1;
+        $this->isHidden = $isHidden;
         parent::__construct();
     }
 
@@ -27,15 +26,15 @@ class BearerTypeAVP extends BaseAVP
     public static function import($data)
     {
         $avp = new self();
-        list(, $avp_flags_len) = unpack('n', $data[0] . $data[1]);
-        $avp->is_mandatory = ($avp_flags_len & 32768) ? 1 : 0;
-        $avp->is_hidden = ($avp_flags_len & 16384) ? 1 : 0;
-        $avp->length = ($avp_flags_len & 1023);
-        if (!$avp->is_hidden && $avp->length != 10) {
+        list(, $avpFlagsLength) = unpack('n', $data[0] . $data[1]);
+        $avp->isMandatory = ($avpFlagsLength & 32768) ? 1 : 0;
+        $avp->isHidden = ($avpFlagsLength & 16384) ? 1 : 0;
+        $avp->length = ($avpFlagsLength & 1023);
+        if (!$avp->isHidden && $avp->length != 10) {
             throw new AVPException("Invalid length: {$avp->length} for Bearer TYPE AVP!");
         }
         list(, $avp->vendor_id) = unpack('n', $data[2] . $data[3]);
-        list(, $avp->type) = unpack('n', $data[4] . $data[5]);
+        list(, $type) = unpack('n', $data[4] . $data[5]);
         $avp->value = array();
         list(, $flag_byte) = unpack('C', $data[9]);
 
@@ -45,10 +44,15 @@ class BearerTypeAVP extends BaseAVP
         return $avp;
     }
 
+    public function getType()
+    {
+        return AvpType::BEARER_TYPE_AVP;
+    }
+
     protected function validate()
     {
-        if (!$this->is_mandatory) {
-            throw new \Exception("Avp {$this->type} must be MANDATORY");
+        if (!$this->isMandatory) {
+            throw new \Exception("Avp {$this->getType()} must be MANDATORY");
         }
     }
 

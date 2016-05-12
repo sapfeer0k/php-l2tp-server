@@ -9,9 +9,8 @@ class FirmwareRevisionAVP extends BaseAVP
 {
     public function __construct($isHidden = 0)
     {
-        $this->type = AvpType::FIRMWARE_REVISION_AVP;
-        $this->is_mandatory = 0;
-        $this->is_hidden = $isHidden;
+        $this->isMandatory = 0;
+        $this->isHidden = $isHidden;
         parent::__construct();
     }
 
@@ -19,14 +18,14 @@ class FirmwareRevisionAVP extends BaseAVP
     {
         $avp = new self();
         list(, $avp_flags_len) = unpack('n', $data[0] . $data[1]);
-        $avp->is_mandatory = ($avp_flags_len & 32768) ? 1 : 0;
-        $avp->is_hidden = ($avp_flags_len & 16384) ? 1 : 0;
+        $avp->isMandatory = ($avp_flags_len & 32768) ? 1 : 0;
+        $avp->isHidden = ($avp_flags_len & 16384) ? 1 : 0;
         $avp->length = ($avp_flags_len & 1023);
         if ($avp->length != 8) {
             throw new AVPException("Invalid length for Firmware Revision");
         }
         list(, $avp->vendor_id) = unpack('n', $data[2] . $data[3]);
-        list(, $avp->type) = unpack('n', $data[4] . $data[5]);
+        list(, $type) = unpack('n', $data[4] . $data[5]);
         list(, $avp->value) = unpack('n', $data[6] . $data[7]);
         $avp->validate();
         return $avp;
@@ -42,6 +41,11 @@ class FirmwareRevisionAVP extends BaseAVP
         return true;
     }
 
+    public function getType()
+    {
+        return AvpType::FIRMWARE_REVISION_AVP;
+    }
+
     protected function getEncodedValue()
     {
         return pack('n', $this->value);
@@ -49,7 +53,7 @@ class FirmwareRevisionAVP extends BaseAVP
 
     protected function validate()
     {
-        if ($this->is_mandatory) {
+        if ($this->isMandatory) {
             throw new AVPException("Firmware Revision should not be mandatory!");
         }
     }

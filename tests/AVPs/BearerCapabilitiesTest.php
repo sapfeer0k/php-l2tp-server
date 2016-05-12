@@ -35,15 +35,15 @@ class BearerCapabilitiesTest extends PHPUnit_Framework_TestCase
         // TODO: implement hiding
         $avp = new BearerCapabilitiesAVP(0);
         $avp->setValue(0);
-        $this->assertEquals(1, $avp->is_mandatory, "Bearer Capability AVP must be mandatory");
-        $this->assertEquals(\L2tpServer\Constants\AvpType::BEARER_CAPABILITIES_AVP, $avp->type, "Type mismatch for Bearer Capability AVP");
+        $this->assertEquals(1, $avp->isMandatory, "Bearer Capability AVP must be mandatory");
+        $this->assertEquals(\L2tpServer\Constants\AvpType::BEARER_CAPABILITIES_AVP, $avp->getType(), "Type mismatch for Bearer Capability AVP");
         return $avp;
     }
 
     /**
      * @depends testConstructor
      */
-    public function testDecoder($avp)
+    public function testDecoder(BearerCapabilitiesAVP $avp)
     {
         $rawData = $avp->encode();
         // test that two objects are equal:

@@ -93,10 +93,10 @@ class Client
 
     /**
      * @param CtrlPacket $packet
-     */
+     *
     private function logAVP(CtrlPacket $packet)
     {
-        foreach ($packet->getAVPS() as $avp) {
+        foreach ($packet->getAvps() as $avp) {
             $className = explode('\\', get_class($avp));
             $this->logger->info(
                 array_pop($className) . ': ' . (is_array($avp->value) ? http_build_query(
@@ -105,6 +105,7 @@ class Client
             );
         }
     }
+    */
 
     /**
      * @return CtrlPacket|Packet|null
