@@ -92,22 +92,6 @@ class Client
     }
 
     /**
-     * @param CtrlPacket $packet
-     *
-    private function logAVP(CtrlPacket $packet)
-    {
-        foreach ($packet->getAvps() as $avp) {
-            $className = explode('\\', get_class($avp));
-            $this->logger->info(
-                array_pop($className) . ': ' . (is_array($avp->value) ? http_build_query(
-                    $avp->value
-                ) : $avp->value)
-            );
-        }
-    }
-    */
-
-    /**
      * @return CtrlPacket|Packet|null
      * @throws ClientException
      * @throws CloseConnectionException
