@@ -11,12 +11,14 @@ namespace L2tpServer\General;
 use L2tpServer\Exceptions\ClientException;
 use L2tpServer\Exceptions\CloseConnectionException;
 use L2tpServer\Exceptions\ServerException;
-use L2tpServer\Factory;
+use L2tpServer\PacketFactory;
+use L2tpServer\Tools\TLogger;
 use Packfire\Logger\File as Logger;
 
 class Server
 {
-    protected $logger;
+    use TLogger;
+
     protected $frameParser;
     private $addr;
     private $port;
@@ -30,7 +32,6 @@ class Server
      */
     public function __construct($addr = "0.0.0.0", $port = 1701)
     {
-        $this->logger = new Logger('server.log');
         $this->clients = array();
         $this->addr = $addr;
         $this->port = $port;
@@ -50,13 +51,10 @@ class Server
         if (socket_bind($this->socket, $this->addr, $this->port) == false) {
             throw new ServerException("Can't bind on address.");
         }
-        if (is_file($this->logger->file())) {
-            unlink($this->logger->file());
-        }
-        $this->logger->info("Starting listen on the {$this->addr}:{$this->port}");
+        $this->getLogger()->info("Starting listen on the {$this->addr}:{$this->port}");
         while (1) {
             if ($this->receive() && $this->deliver()) {
-                usleep(1000);
+                usleep(10);
             }
         }
     }
@@ -71,32 +69,34 @@ class Server
         $ip = $port = $buf = null;
         $len = socket_recvfrom($this->socket, $buf, 65535, MSG_DONTWAIT, $ip, $port);
         if ($len > 0) {
-            $client_hash = md5($ip); // xl2tp sents PINGs from different ports
+            $clientId = md5($ip); // xl2tp sents PINGs from different ports
             // Is it new client ?
-            if (!isset($this->clients[$client_hash]) || !is_object($this->clients[$client_hash])) {
-                $this->logger->info("New connection: $ip:$port");
+            if (!isset($this->clients[$clientId]) || !is_object($this->clients[$clientId])) {
+                $this->getLogger()->info("New connection: $ip:$port");
                 $client = new Client($ip, $port);
+                $client->setLogger($this->getLogger());
                 $client->setSocket($this->socket);
-                $this->clients[$client_hash] = $client;
+                $this->clients[$clientId] = $client;
             }
-            //$this->logger->info("Got data. Client: {$ip}, data: " . bin2hex($buf));
-            $packet = Factory::createPacket($buf);
+            $packet = PacketFactory::parse($buf);
             /* @var $packet Packet */
             /* @var $response CtrlPacket */
             try {
-                $response = $this->getClient($client_hash)->processRequest($packet);
+                $this->getLogger()->info('Received packet: ' . (string)$packet);
+                $response = $this->getClient($clientId)->processRequest($packet);
                 if ($response) {
+                    $this->getLogger()->info('Sent packet: ' . (string)$packet);
                     $rawData = $response->encode();
-                    $this->getClient($client_hash)->send($rawData);
+                    $this->getClient($clientId)->send($rawData);
                     $idle = false;
                 }
             } catch (CloseConnectionException $e) {
-                $this->logger->info("Closing connection for client: $ip:$port");
-                unset($this->clients[$client_hash]);
+                $this->getLogger()->info("Closing connection for client: $ip:$port");
+                unset($this->clients[$clientId]);
             } catch (ClientException $e) {
-                $this->logger->error($client_hash . ' error: ' . $e->getMessage());
-                $this->logger->error('Drop packet from ' . $client_hash);
-                unset($this->clients[$client_hash]);
+                $this->getLogger()->error($clientId . ' error: ' . $e->getMessage());
+                $this->getLogger()->error('Drop packet from ' . $clientId);
+                unset($this->clients[$clientId]);
             }
         }
         return $idle;
@@ -122,7 +122,7 @@ class Server
             if ($client->getTimeout() < time()) {
                 /* @var $client Client */
                 // TODO: send keep alive packet
-                $this->logger->info("Client: $id disconnected by timeout");
+                $this->getLogger()->info("Client: $id disconnected by timeout");
                 unset($this->clients[$id]);
             }
             foreach ($client->getTunnels() as $tunnelId => $tunnel) {
@@ -136,11 +136,9 @@ class Server
                         $frames = $this->getFrameParser()->split($string);
                         foreach ($frames as $frame) {
                             $string = $this->getFrameParser()->decode($frame);
-                            $responsePacket = new DataPacket();
-                            $responsePacket->setTunnelId($tunnel->getId());
-                            $responsePacket->setSessionId($session->getId());
-                            $responsePacket->setPayload($string);
+                            $responsePacket = DataPacket::factory()->create($tunnel, $session, $string);
                             $client->send($responsePacket->encode());
+                            $this->getLogger()->info('Sent packet: ' . (string)$responsePacket);
                             $idle = false;
                         }
                     }

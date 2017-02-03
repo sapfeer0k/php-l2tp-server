@@ -23,17 +23,27 @@ use L2tpServer\General\CtrlPacket;
 use L2tpServer\General\DataPacket;
 use L2tpServer\General\Packet;
 
-class Factory
+class PacketFactory
 {
-
-    public static function createPacket($raw_data)
+    /**
+     * @param $rawData
+     * @return Packet
+     * @throws \Exception
+     */
+    public static function parse($rawData)
     {
-        list( , $byte) = unpack('C', $raw_data[0]);
+        list( , $byte) = unpack('C', $rawData[0]);
         if ($byte & Packet::TYPE_CONTROL) {
-            $packet = new CtrlPacket($raw_data);
+            $packet = CtrlPacket::factory()->parse($rawData);
         } else {
-            $packet = new DataPacket($raw_data);
+            $packet = DataPacket::factory()->parse($rawData);
         }
         return $packet;
+    }
+
+    public static function generateZLB()
+    {
+        $responsePacket = CtrlPacket::factory();
+        return $responsePacket;
     }
 }

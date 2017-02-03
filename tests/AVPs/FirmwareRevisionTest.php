@@ -43,7 +43,7 @@ class FirmwareRevisionTest extends PHPUnit_Framework_TestCase
         }
         $avp->setValue($version);
         $this->assertEquals(0, $avp->isMandatory, "Firmware Revision AVP must not be mandatory");
-        $this->assertEquals(AvpType::FIRMWARE_REVISION_AVP, $avp->type, "Type mismatch for Firmware Revision AVP");
+        $this->assertEquals(AvpType::FIRMWARE_REVISION_AVP, $avp->getType(), "Type mismatch for Firmware Revision AVP");
         return $avp;
     }
 

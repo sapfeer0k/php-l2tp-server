@@ -6,7 +6,7 @@
  * Time: 17:33
  */
 
-use L2tpServer\Factory,
+use L2tpServer\PacketFactory,
     L2tpServer\General\CtrlPacket,
     L2tpServer\General\Packet as Packet;
 
@@ -24,7 +24,7 @@ class PacketFactoryTest extends PHPUnit_Framework_TestCase
      */
     public function testParseCreatedControlPacket($binaryPacket)
     {
-        $packet = new CtrlPacket($binaryPacket);
+        $packet = CtrlPacket::factory()->parse($binaryPacket);
         $originalPacket = $this->getPacket();
         $originalPacket->encode(); // Hack! We need to calculate length property
         $this->assertEquals($originalPacket, $packet, "Packet before creation and after are mismatch!");
@@ -34,10 +34,10 @@ class PacketFactoryTest extends PHPUnit_Framework_TestCase
     {
         $rawData = file_get_contents(dirname(__FILE__) . '/1.raw');
 
-        $packet = Factory::createPacket($rawData);
-        $this->assertTrue($packet instanceof Packet, "Type mismatch. Factory should return Packet instance");
-        $this->assertTrue($packet instanceof CtrlPacket, "Type mismatch. Factory should return CtrlPacket instance");
-        $this->assertEquals($packet->length, strlen($rawData), "Packet lentgth mismatch error");
+        $packet = PacketFactory::parse($rawData);
+        $this->assertTrue($packet instanceof Packet, "Type mismatch. PacketFactory should return Packet instance");
+        $this->assertTrue($packet instanceof CtrlPacket, "Type mismatch. PacketFactory should return CtrlPacket instance");
+        $this->assertEquals($packet->getLength(), strlen($rawData), "Packet lentgth mismatch error");
         //$this->markTestIncomplete("Please, add more check here!");
         return $packet;
     }
@@ -50,15 +50,15 @@ class PacketFactoryTest extends PHPUnit_Framework_TestCase
         //$this->markTestIncomplete("Please, add more checks here!");
         $rawCustomData = $packet->encode();
         $this->assertEquals(strlen(file_get_contents(dirname(__FILE__) . '/1.raw')), strlen($rawCustomData), "Packets length mismatching");
-        $new_packet = Factory::createPacket($rawCustomData);
+        $new_packet = PacketFactory::parse($rawCustomData);
         $this->assertEquals($packet, $new_packet, "Packets mistmaching!");
     }
 
     protected function getPacket()
     {
         $packet = CtrlPacket::create();
-        $packet->setNs(1000);
-        $packet->setNr(1000);
+        $packet->setNumberSent(1000);
+        $packet->setNumberReceived(1000);
         return $packet;
     }
 } 

@@ -11,14 +11,10 @@ abstract class BaseAVP
     protected $value;
     protected $length;
     protected $vendor_id;
-    //protected $type;
     protected $is_ignored;
 
     public function __construct()
     {
-//        if ($this->type === null) {
-//            throw new AVPException("Type must be defined in every AVP");
-//        }
         $this->vendor_id = 0;
     }
 
@@ -57,7 +53,7 @@ abstract class BaseAVP
         }
         if ($this->isHidden) {
             throw new \Exception("Implement hidden encoding for AVP");
-            $flags += 16384;
+            //$flags += 16384;
         }
         if ($this->length > pow(2, 10)) {
             throw new \Exception("Length too big");
@@ -76,4 +72,9 @@ abstract class BaseAVP
     abstract public function getType();
 
     abstract protected function validate();
+
+    public function __toString()
+    {
+        return (new \ReflectionClass($this))->getShortName() . ' ' . json_encode(get_object_vars($this));
+    }
 }

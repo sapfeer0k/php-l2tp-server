@@ -30,34 +30,27 @@ use L2tpServer\Constants\AvpType;
 use L2tpServer\Exceptions\TunnelException;
 use L2tpServer\Exceptions\IgnoreAVPException;
 use L2tpServer\AVPs\BaseAVP;
+use L2tpServer\Tools\TLogger;
 use Packfire\Logger\File as Logger;
 
 class CtrlPacket extends Packet
 {
-
-    const TRUE = 1;
-    const FALSE = 0;
+    use TLogger;
 
     protected $avps = array();
 
-    public function __construct($rawPacket = false)
+    protected function __construct()
     {
-        $this->logger = new Logger('server.log');
-        if ($rawPacket) {
-            if (!$this->parse($rawPacket)) {
-                throw new \Exception("Can't parse packet");
-            }
-        } else {
-            $this->packetType = self::TYPE_CONTROL;
-            $this->isLengthPresent = self::TRUE;
-            $this->isSequencePresent = self::TRUE;
-            $this->isOffsetPresent = self::FALSE;
-            $this->isPrioritized = self::FALSE;
-            $this->Ns = 0;
-            $this->Nr = 0;
-            $this->tunnelId = 0;
-            $this->sessionId = 0;
-        }
+        parent::__construct();
+        $this->packetType = self::TYPE_CONTROL;
+        $this->isLengthPresent = self::TRUE;
+        $this->isSequencePresent = self::TRUE;
+        $this->isOffsetPresent = self::FALSE;
+        $this->isPrioritized = self::FALSE;
+        $this->numberSent = 0;
+        $this->numberReceived = 0;
+        $this->tunnelId = 0;
+        $this->sessionId = 0;
         return true;
     }
 
@@ -67,15 +60,15 @@ class CtrlPacket extends Packet
         return true;
     }
 
-    protected function parse($packet)
+    public function parse($rawData)
     {
-        $this->parseHeader($packet);
+        $this->parseHeader($rawData);
         // Further we'll work with $packet_data property:
-        $payload = substr($packet, 12);
+        $payload = substr($rawData, 12);
         if (strlen($payload)) {
             $this->parseAVPs($payload);
         }
-        return true;
+        return $this;
     }
 
     protected function parseAVPs($payload)
@@ -114,20 +107,20 @@ class CtrlPacket extends Packet
         return $header . $packetData;
     }
 
-    public function setNs($nS)
+    public function setNumberSent($numberSent)
     {
-        if (!is_numeric($nS) && $nS < 0) {
+        if (!is_numeric($numberSent) && $numberSent < 0) {
             throw new \Exception("Nr must be greater or euqual than 0");
         }
-        $this->Ns = $nS % 65536;
+        $this->numberSent = $numberSent % 65536;
     }
 
-    public function setNr($nR)
+    public function setNumberReceived($nR)
     {
         if (!is_numeric($nR) && $nR < 0) {
             throw new \Exception("Nr must be greater or euqual than 0");
         }
-        $this->Nr = $nR % 65536;
+        $this->numberReceived = $nR % 65536;
     }
 
     public static function create()
@@ -155,9 +148,22 @@ class CtrlPacket extends Packet
         return count($this->avps);
     }
 
+    /**
+     * @return BaseAVP[]
+     */
     public function getAvps()
     {
         // DEBUG METHOD ONLY
         return $this->avps;
+    }
+
+    public function __toString()
+    {
+        $vars = get_object_vars($this);
+        unset($vars['avps']);
+        foreach($this->getAvps() as $avp) {
+            $vars['avps'][] = (string)$avp;
+        }
+        return (new \ReflectionClass($this))->getShortName() . " " . json_encode($vars);
     }
 }

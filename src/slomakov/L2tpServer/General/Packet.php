@@ -4,6 +4,8 @@ namespace L2tpServer\General;
 
 abstract class Packet
 {
+    const TRUE = 1;
+    const FALSE = 0;
 
     const TYPE_CONTROL = 128,
         TYPE_DATA = 0;
@@ -19,18 +21,13 @@ abstract class Packet
     protected $length;
     protected $tunnelId;
     protected $sessionId;
-    protected $Ns;
-    protected $Nr;
+    protected $numberSent;
+    protected $numberReceived;
     protected $error;
     protected $offset;
 
-    public function __construct($rawPacket = false)
+    protected function __construct()
     {
-        if ($rawPacket) {
-            if (!$this->parse($rawPacket)) {
-                throw new \Exception("Can't parse packet");
-            }
-        }
     }
 
     public function getType()
@@ -41,31 +38,11 @@ abstract class Packet
     // Return packet properties encoded as raw string:
     abstract public function encode();
 
-    //public abstract function getAVP($type);
-
     /**
-     * @param string $name name of property to return
-     * @return mixed return any property data
-     * @throws \Exception
-     */
-    public function __get($name)
-    {
-        if (method_exists($this, ($method = 'get'.ucfirst($name)))) {
-            return $this->$method;
-        } else {
-            if (property_exists($this, $name)) {
-                return $this->$name;
-            } else {
-                throw new \Exception("You're trying to read property '$name' which doesn't exist");
-            }
-        }
-    }
-
-    /**
-     * @param $packet
+     * @param $rawData
      * @return mixed
      */
-    abstract protected function parse($packet);
+    abstract public function parse($rawData);
 
     /**
      * @param string $packet - binary representation of the header
@@ -110,8 +87,8 @@ abstract class Packet
         list( , $this->tunnelId) = unpack('n', $packet[++$offset].$packet[++$offset]);
         list( , $this->sessionId) = unpack('n', $packet[++$offset].$packet[++$offset]);
         if ($this->isSequencePresent) { // actually it is always must be present, but double check :-)
-            list( , $this->Ns) = unpack('n', $packet[++$offset].$packet[++$offset]);
-            list( , $this->Nr) = unpack('n', $packet[++$offset].$packet[++$offset]);
+            list( , $this->numberSent) = unpack('n', $packet[++$offset].$packet[++$offset]);
+            list( , $this->numberReceived) = unpack('n', $packet[++$offset].$packet[++$offset]);
         }
         if ($this->isData() && $this->isOffsetPresent) {
             $this->offset = unpack('n', $packet[++$offset].$packet[++$offset]);
@@ -149,8 +126,8 @@ abstract class Packet
         $header .= pack('n', (int)$this->tunnelId);
         $header .= pack('n', (int)$this->sessionId);
         if ($this->isSequencePresent) {
-            $header .= pack('n', (int)$this->Ns);
-            $header .= pack('n', (int)$this->Nr);
+            $header .= pack('n', (int)$this->numberSent);
+            $header .= pack('n', (int)$this->numberReceived);
         }
         if ($this->isLengthPresent) {
             // Setting final length:
@@ -176,8 +153,43 @@ abstract class Packet
         $this->tunnelId = $tunnelId;
     }
 
+    public function getTunnelId()
+    {
+        return $this->tunnelId;
+    }
+
     public function setSessionId($sessionId)
     {
         $this->sessionId = $sessionId;
+    }
+
+    public function getNumberReceived()
+    {
+        return $this->numberReceived;
+    }
+
+    public function getNumberSent()
+    {
+        return $this->numberSent;
+    }
+
+    public function getSessionId()
+    {
+        return $this->sessionId;
+    }
+
+    abstract public function __toString();
+
+    /**
+     * @return static
+     */
+    public static function factory()
+    {
+        return new static();
+    }
+
+    public function getLength()
+    {
+        return $this->length;
     }
 }

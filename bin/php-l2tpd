@@ -31,4 +31,5 @@ require_once('vendor/autoload.php');
 use L2tpServer\General\Server as L2TPServer;
 
 $l2tp_server = new L2TPServer();
+$l2tp_server->setLogger(\L2tpServer\Tools\Logger::factory('server.log'));
 $l2tp_server->run();

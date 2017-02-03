@@ -24,24 +24,27 @@ namespace L2tpServer\General;
 use L2tpServer\AVPs\AVPFactory;
 use L2tpServer\Constants\AvpType;
 use L2tpServer\Constants\Protocol;
+use L2tpServer\Exceptions\CloseConnectionException;
+use L2tpServer\Exceptions\ServerException;
+use L2tpServer\PacketFactory;
+use L2tpServer\Tools\TLogger;
 use Packfire\Logger\File as Logger;
 
 class Tunnel
 {
+    use TLogger;
 
     private $id;
     private $internalId;
     private $sessions;
     // TODO: implement all tunnel properties here
-    /* @var Logger */
-    private $logger;
+
 
     public function __construct($tunnelId, $internalId)
     {
         // no problem with avps:
         $this->id = $tunnelId;
         $this->internalId = $internalId;
-        $this->logger = new Logger('server.log');
         $this->sessions = array();
     }
 
@@ -59,49 +62,53 @@ class Tunnel
         $responsePacket = null;
         switch ($messageType) {
             case MT_SCCRQ: // We've got a request, let's answer then? :-)
-                $this->logger->info("[TUNNEL] Start-Control-Connection-Request");
+                $this->getLogger()->info("[TUNNEL] Start-Control-Connection-Request");
                 $responsePacket = $this->generateSCCRP();
                 break;
             case MT_SCCCN:
-                $this->logger->info("[TUNNEL] Start-Control-Connection-Connected");
-                $responsePacket = $this->generateZLB();
+                $this->getLogger()->info("[TUNNEL] Start-Control-Connection-Connected");
+                $responsePacket = PacketFactory::generateZLB();
                 break;
             case MT_CDN:
-                $this->logger->info("[TUNNEL] Call-Disconnect-Notify");
+                $this->getLogger()->info("[TUNNEL] Call-Disconnect-Notify");
                 foreach ($this->sessions as $sessionId => $session) {
                     unset($this->sessions[$sessionId]);
-                    $this->logger->info("[TUNNEL] Destroying session $sessionId");
                     $result = $packet->getAVP(AvpType::RESULT_CODE_AVP)->value;
-                    $this->logger->info("Result code: $result[resultCode]");
-                    $this->logger->info("Error code: $result[errorCode]");
+                    $this->getLogger()->info("[TUNNEL] Destroyed session $sessionId. Avp result code: $result[resultCode]");
+                    //$this->getLogger()->info("Error code: $result[errorCode]");
                 }
+                $responsePacket = PacketFactory::generateZLB();
                 break;
             case MT_HELLO:
-                $this->logger->info("[TUNNEL] HELLO");
-                $responsePacket = $this->generateZLB();
+                $this->getLogger()->info("[TUNNEL] HELLO");
+                $responsePacket = PacketFactory::generateZLB();
                 break;
             case MT_ICRQ: // Request for a new session
                 $serverSessionId = count($this->sessions) + 1;
                 $sessionId = $packet->getAVP(AvpType::ASSIGNED_SESSION_ID_AVP)->value;
                 $message = "[TUNNEL] Incoming-Call-Request. New client session: $sessionId, internal: $serverSessionId";
-                $this->logger->info($message);
-                $this->sessions[$serverSessionId] = new Session($sessionId, $serverSessionId);
+                $this->getLogger()->info($message);
+                $session = new Session($sessionId, $serverSessionId);
+                $session->setLogger($this->getLogger());
+                $this->sessions[$serverSessionId] = $session;
                 $responsePacket = $this->sessions[$serverSessionId]->processRequest($packet);
                 break;
             default:
-                $sessionId = $packet->sessionId;
-                //$this->logger->info("[TUNNEL] Packet for Session: $sessionId");
+                $sessionId = $packet->getSessionId();
+                //$this->getLogger()->info("[TUNNEL] Packet for Session: $sessionId");
                 if (!$sessionId) {
-                    var_dump($messageType);
-                    throw new \Exception("Session not defined");
+                    throw new ServerException("Session not defined");
                 }
                 if (!isset($this->sessions[$sessionId])) {
-                    $this->logger->info("[TUNNEL] Bad packet: " . var_export($packet, true));
-                    throw new \Exception("Session not defined");
+                    $this->getLogger()->info("[TUNNEL] Bad packet: " . var_export($packet, true));
+                    if ($packet->isControl()) {
+                        //throw new CloseConnectionException();
+                    }
+                } else {
+                    /* @var Session $session */
+                    $session = $this->sessions[$sessionId];
+                    $responsePacket = $session->processRequest($packet);
                 }
-                /* @var Session $session */
-                $session = $this->sessions[$sessionId];
-                $responsePacket = $session->processRequest($packet);
         }
         if ($responsePacket) {
             $responsePacket->setTunnelId($this->getId());
@@ -111,8 +118,8 @@ class Tunnel
 
     private function generateSCCRP()
     {
-        $this->logger->info("[TUNNEL] Start-Control-Connection-Reply");
-        $responsePacket = new CtrlPacket();
+        $this->getLogger()->info("[TUNNEL] Start-Control-Connection-Reply");
+        $responsePacket = CtrlPacket::factory();
         // Add message type:
         $avp = AVPFactory::create(AvpType::MESSAGE_TYPE_AVP);
         $avp->setValue(MT_SCCRP);
@@ -147,13 +154,6 @@ class Tunnel
         // TODO: put this value into constant
         $avp->setValue(1024);
         $responsePacket->addAVP($avp);
-        return $responsePacket;
-    }
-
-    private function generateZLB()
-    {
-        $this->logger->info("[TUNNEL] ZLB ACK");
-        $responsePacket = new CtrlPacket();
         return $responsePacket;
     }
 

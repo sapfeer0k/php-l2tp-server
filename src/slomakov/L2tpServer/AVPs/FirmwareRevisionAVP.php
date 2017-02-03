@@ -16,7 +16,7 @@ class FirmwareRevisionAVP extends BaseAVP
 
     public static function import($data)
     {
-        $avp = new self();
+        $avp = new static();
         list(, $avp_flags_len) = unpack('n', $data[0] . $data[1]);
         $avp->isMandatory = ($avp_flags_len & 32768) ? 1 : 0;
         $avp->isHidden = ($avp_flags_len & 16384) ? 1 : 0;
@@ -54,7 +54,7 @@ class FirmwareRevisionAVP extends BaseAVP
     protected function validate()
     {
         if ($this->isMandatory) {
-            throw new AVPException("Firmware Revision should not be mandatory!");
+            //throw new AVPException("Firmware Revision should not be mandatory!");
         }
     }
 }

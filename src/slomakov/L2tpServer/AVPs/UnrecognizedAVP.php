@@ -27,7 +27,7 @@ class UnrecognizedAVP extends BaseAVP
         if ($this->isMandatory) {
             throw new AVPException("Unknown mandatory AVP!");
         } else {
-            $this->is_ignored = true;
+            $this->is_ignored = 1;
         }
     }
 
